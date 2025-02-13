@@ -1,0 +1,13 @@
+name: Deploy To EC2
+
+on:
+  push:
+    branches:
+      - deploy
+
+jobs:
+  deploy-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: deploy-test
+        run: echo "deploy-test"
