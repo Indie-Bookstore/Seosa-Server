@@ -6,6 +6,11 @@ on:
       - deploy # main으로 수정 예정
 
 jobs:
+  deploy-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: deploy-test
+        run: echo "deploy-test"
   deploy:
     runs-on: ubuntu-latest
     steps:
