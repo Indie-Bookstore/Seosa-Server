@@ -39,3 +39,9 @@ dependencies {
 tasks.named('test') {
 	useJUnitPlatform()
 }
+
+// EC2 Ubuntu 환경에서 발생하는 테스트코드 관련 에러 해결
+tasks.withType(Test) {
+	scanForTestClasses = false
+	include "**/*Test.class"
+}
