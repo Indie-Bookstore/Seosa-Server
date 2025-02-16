@@ -20,7 +20,7 @@ jobs:
           java-version: 17
 
       - name: Seosa-Server/seosa로 위치 변경
-        run: cd seosa
+        run: cd /home/runner/work/Seosa-Server/Seosa-Server/seosa
 
       - name: 현 위치 확인
         run: pwd
