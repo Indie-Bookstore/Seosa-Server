@@ -35,7 +35,9 @@ jobs:
         run: mv ./seosa/build/libs/*SNAPSHOT.jar ./project.jar
 
       - name: 압축하기
-        run: tar -czvf $GITHUB_SHA.tar.gz project.jar appspec.yml scripts
+        run: |
+          cd ./seosa
+          tar -czvf $GITHUB_SHA.tar.gz project.jar appspec.yml scripts
 
       - name: AWS Resource에 접근할 수 있게 AWS credentials 설정
         uses: aws-actions/configure-aws-credentials@v4
@@ -45,10 +47,14 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
       - name: S3에 프로젝트 폴더 업로드하기
-        run: aws s3 cp --region ap-northeast-2 ./$GITHUB_SHA.tar.gz s3://seosa-server/$GITHUB_SHA.tar.gz
+        run: |
+          cd ./seosa
+          aws s3 cp --region ap-northeast-2 ./$GITHUB_SHA.tar.gz s3://seosa-server/$GITHUB_SHA.tar.gz
 
       - name: Code Deploy를 활용해 EC2에 프로젝트 코드 배포
-        run: aws deploy create-deployment
+        run: |
+          cd ./seosa
+          aws deploy create-deployment
           --application-name Seosa-Server
           --deployment-config-name CodeDeployDefault.AllAtOnce
           --deployment-group-name Production
