@@ -19,8 +19,9 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - name: 현 위치 확인
-        run: pwd
-
-      - name: ls -a 실행
-        run: ls -a
+      - name: application.yml 파일 만들기
+        run: |
+          cd ./seosa/src/main
+          mkdir resources
+          cd resources
+          echo "${{ secrets.APPLICATION_PROPERTIES }}" > application.yml
