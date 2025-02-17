@@ -57,7 +57,7 @@ jobs:
           cd ./seosa
           docker push ${{ steps.login-ecr.outputs.registry }}/seosa-server:latest
 
-      - name: SSH로 EC2에 접속하기 + docker pull 먼저 실행
+      - name: SSH로 EC2에 접속하기
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
