@@ -70,7 +70,7 @@ jobs:
           key: ${{ secrets.EC2_PRIVATE_KEY }}
           script_stop: true
           script: |
-            docker stop Seosa-Server || true
-            docker rm Seosa-Server || true
-            docker pull ${{ steps.login-ecr.outputs.registry }}/Seosa-Server:latest
-            docker run -d --name Seosa-Server -p 8080:8080 ${{ steps.login-ecr.outputs.registry }}/Seosa-Server:latest
+            docker stop seosa || true
+            docker rm seosa || true
+            docker pull ${{ steps.login-ecr.outputs.registry }}/seosa:latest
+            docker run -d --name seosa -p 8080:8080 ${{ steps.login-ecr.outputs.registry }}/seosa:latest
