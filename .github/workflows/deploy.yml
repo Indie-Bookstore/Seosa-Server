@@ -57,6 +57,11 @@ jobs:
           cd ./seosa
           docker push ${{ steps.login-ecr.outputs.registry }}/seosa-server:latest
 
+      - name: pwd test
+        run: |
+          pwd
+          ls -a
+
       - name: SSH로 EC2에 접속하기
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -65,7 +70,6 @@ jobs:
           key: ${{ secrets.EC2_PRIVATE_KEY }}
           script_stop: true
           script: |
-            cd ./seosa
             docker stop seosa-server || true
             docker rm seosa-server || true
             docker pull ${{ steps.login-ecr.outputs.registry }}/seosa-server:latest
