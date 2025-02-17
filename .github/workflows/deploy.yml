@@ -67,7 +67,3 @@ jobs:
           script: |
             docker pull ${{ steps.login-ecr.outputs.registry }}/seosa-server:latest
             docker run -d --name seosa-server -p 8080:8080 ${{ steps.login-ecr.outputs.registry }}/seosa-server:latest
-            docker stop seosa-server || true
-            docker rm seosa-server || true
-            docker pull ${{ steps.login-ecr.outputs.registry }}/seosa-server:latest
-            docker run -d --name seosa-server -p 8080:8080 ${{ steps.login-ecr.outputs.registry }}/seosa-server:latest
