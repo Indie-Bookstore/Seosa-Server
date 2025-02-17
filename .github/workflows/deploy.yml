@@ -61,6 +61,7 @@ jobs:
         run: |
           pwd
           ls -a
+          docker ps -a 
 
       - name: SSH로 EC2에 접속하기
         uses: appleboy/ssh-action@v1.0.3
