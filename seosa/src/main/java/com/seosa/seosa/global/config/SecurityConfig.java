@@ -23,8 +23,8 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 
 import java.util.Collections;
-
-import static org.springframework.security.config.Customizer.withDefaults;
+import java.util.Arrays;
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -100,7 +100,7 @@ public class SecurityConfig {
                         .anyRequest().authenticated() // 나머지는 인증 필요
                 )
 
-                // 커스텀 필터 등록
+                // 커스텀 필터 등록 - 로그인, 로그아웃
                 .addFilterBefore(new JWTFilter(jwtUtil, userRepository), LoginFilter.class)
                 .addFilterAt(new LoginFilter(authenticationManager(authenticationConfiguration), jwtUtil, refreshTokenRepository), UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(new CustomLogoutFilter(jwtUtil, refreshTokenRepository), LogoutFilter.class)
