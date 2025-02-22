@@ -1,9 +1,12 @@
 package com.seosa.seosa.domain.jwt;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.seosa.seosa.domain.auth.local.dto.LoginDTO;
 import com.seosa.seosa.domain.token.entity.RefreshTokenEntity;
 import com.seosa.seosa.domain.token.repository.RefreshTokenRepository;
 import com.seosa.seosa.domain.user.dto.CustomUserDetails;
 import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletInputStream;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -15,7 +18,10 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.util.StreamUtils;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
@@ -40,9 +46,21 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     @Override
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException {
 
+        LoginDTO loginDTO = new LoginDTO();
+
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            ServletInputStream inputStream = request.getInputStream();
+            String messageBody = StreamUtils.copyToString(inputStream, StandardCharsets.UTF_8);
+            loginDTO = objectMapper.readValue(messageBody, LoginDTO.class);
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
         // 클라이언트 요청에서 email, password 추출
-        String email = request.getParameter("email");
-        String password = request.getParameter("password");
+        String email = loginDTO.getEmail();
+        String password = loginDTO.getPassword();
 
         UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(email, password, null);
 

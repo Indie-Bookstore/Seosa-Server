@@ -1,4 +1,4 @@
-package com.seosa.seosa.domain.auth.local.Controller;
+package com.seosa.seosa.domain.token.controller;
 
 import com.seosa.seosa.domain.jwt.JWTUtil;
 import com.seosa.seosa.domain.token.entity.RefreshTokenEntity;
@@ -30,7 +30,7 @@ public class ReissueController {
     @PostMapping("/reissue")
     public ResponseEntity<?> reissue(HttpServletRequest request, HttpServletResponse response) {
 
-        //get refresh token
+        //get refresh token (쿠키를 사용하고 있기 때문에 자동으로 가져옴)
         String refreshToken = null;
         Cookie[] cookies = request.getCookies();
         for (Cookie cookie : cookies) {
