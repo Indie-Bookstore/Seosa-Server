@@ -6,11 +6,9 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.web.filter.GenericFilterBean;
-
 import java.io.IOException;
 
 public class CustomLogoutFilter extends GenericFilterBean {
@@ -21,7 +19,6 @@ public class CustomLogoutFilter extends GenericFilterBean {
     public CustomLogoutFilter(JWTUtil jwtUtil, RefreshTokenRepository refreshTokenRepository) {
         this.jwtUtil = jwtUtil;
         this.refreshTokenRepository = refreshTokenRepository;
-
     }
 
     @Override
@@ -30,78 +27,48 @@ public class CustomLogoutFilter extends GenericFilterBean {
     }
 
     private void doFilter(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws IOException, ServletException {
-
-        //path and method verify
-        String requestUri = request.getRequestURI();
-        if (!requestUri.matches("^\\/local\\/logout$")) {
-
-            filterChain.doFilter(request, response);
-            return;
-        }
-        String requestMethod = request.getMethod();
-        if (!requestMethod.equals("POST")) {
-
+        // 경로 및 HTTP 메서드 확인
+        if (!request.getRequestURI().equals("/local/logout") || !"POST".equals(request.getMethod())) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        //get refresh token
-        String refreshToken = null;
-        Cookie[] cookies = request.getCookies();
-        if (cookies != null) {
-            for (Cookie cookie : cookies) {
-                if (cookie.getName().equals("refreshToken")) {
-                    refreshToken = cookie.getValue();
-                }
-            }
-        }
+        // `refreshToken`을 Request Header에서 가져오기
+        String refreshToken = request.getHeader("refreshToken");
 
-        //refresh null check
+        // `refreshToken`이 없으면 400 Bad Request 반환
         if (refreshToken == null) {
-
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            response.getWriter().write("{\"error\": \"Refresh token is required\"}");
             return;
         }
 
-        //expired check
+        // `refreshToken`이 만료되었는지 확인
         try {
             jwtUtil.isExpired(refreshToken);
         } catch (ExpiredJwtException e) {
-
-            //response status code
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write("{\"error\": \"Refresh token expired\"}");
             return;
         }
 
-        // 토큰이 refresh인지 확인 (발급시 페이로드에 명시)
-        String category = jwtUtil.getCategory(refreshToken);
-        if (category == null || !category.equals("refreshToken")) {
-
-            //response status code
+        // `refreshToken`이 올바른지 확인
+        if (!"refreshToken".equals(jwtUtil.getCategory(refreshToken))) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            response.getWriter().write("{\"error\": \"Invalid refresh token\"}");
             return;
         }
 
-        //DB에 저장되어 있는지 확인
-        Boolean isExist = refreshTokenRepository.existsByRefreshToken(refreshToken);
-        if (!isExist) {
-
-            //response status code
+        // Redis에서 `refreshToken` 존재 여부 확인
+        if (!refreshTokenRepository.existsByRefreshToken(refreshToken)) {
             response.setStatus(HttpServletResponse.SC_NO_CONTENT);
             return;
         }
 
-        //로그아웃 진행
-        //Refresh 토큰 DB에서 제거
+        // Redis에서 `refreshToken` 삭제
         refreshTokenRepository.deleteByRefreshToken(refreshToken);
 
-        //Refresh 토큰 Cookie 값 0
-        Cookie cookie = new Cookie("refreshToken", null);
-        cookie.setMaxAge(0);
-        cookie.setPath("/");
-
-        response.addCookie(cookie);
-
+        // 로그아웃 성공 응답
         response.setStatus(HttpServletResponse.SC_OK);
         response.setContentType("application/json");
         response.getWriter().write("{\"message\": \"Logged out successfully\"}");

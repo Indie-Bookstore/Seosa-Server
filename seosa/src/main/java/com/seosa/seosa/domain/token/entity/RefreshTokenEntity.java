@@ -1,22 +1,33 @@
 package com.seosa.seosa.domain.token.entity;
 
-import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.redis.core.RedisHash;
+import org.springframework.data.redis.core.index.Indexed;
 
-@Entity
+import java.time.LocalDateTime;
+
 @Getter
 @Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@RedisHash(value = "refreshToken", timeToLive = 30*86400) // TTL 30일 (86400초)
 public class RefreshTokenEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    private Long userId;
     private String refreshToken;
-    private String refreshTokenExpiresAt;
+    @Indexed
+    private Long userId;
+    private LocalDateTime refreshTokenExpiresAt;
 
-    @Version // 낙관적 락 적용
-    private Integer version;
+    public boolean isExpired() {
+        return refreshTokenExpiresAt.isBefore(LocalDateTime.now());
+    }
+
+    public RefreshTokenEntity(String refreshToken, Long userId) {
+        this.refreshToken = refreshToken;
+        this.userId = userId;
+    }
 }
+

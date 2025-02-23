@@ -1,17 +1,17 @@
 package com.seosa.seosa.domain.token.repository;
 
 import com.seosa.seosa.domain.token.entity.RefreshTokenEntity;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.repository.CrudRepository;
 
 import java.util.Optional;
 
-public interface RefreshTokenRepository extends JpaRepository<RefreshTokenEntity, Long> {
+public interface RefreshTokenRepository extends CrudRepository<RefreshTokenEntity, String> {
 
-    Boolean existsByRefreshToken(String refreshToken);
+    boolean existsByRefreshToken(String refreshToken);
 
-    @Transactional
     void deleteByRefreshToken(String refreshToken);
 
     Optional<RefreshTokenEntity> findByUserId(Long userId);
+
+    Optional<RefreshTokenEntity> findByRefreshToken(String refreshToken);
 }

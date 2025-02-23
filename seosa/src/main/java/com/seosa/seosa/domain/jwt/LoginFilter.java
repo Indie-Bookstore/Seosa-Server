@@ -2,15 +2,16 @@ package com.seosa.seosa.domain.jwt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.seosa.seosa.domain.auth.local.dto.LoginDTO;
+import com.seosa.seosa.domain.token.dto.TokenResponseDTO;
 import com.seosa.seosa.domain.token.entity.RefreshTokenEntity;
 import com.seosa.seosa.domain.token.repository.RefreshTokenRepository;
 import com.seosa.seosa.domain.user.dto.CustomUserDetails;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletInputStream;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -23,11 +24,10 @@ import org.springframework.util.StreamUtils;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
-import java.util.Date;
 import java.util.Iterator;
-import java.util.Optional;
 
 // 아이디, 비밀번호 검증을 위한 로그인 커스텀 필터
+@Slf4j
 public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 
     private final AuthenticationManager authenticationManager;
@@ -84,55 +84,40 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         // refresh 토큰 (만료 시간 30일)
         String refreshToken = jwtUtil.createJwt("refreshToken", userId, userRole, 30* 24 * 60 * 60 * 1000L);
 
-        //Refresh 토큰 저장
+        // Refresh 토큰 저장
         addRefreshTokenEntity(userId, refreshToken, 30* 24 * 60 * 60 * 1000L);
 
-        // 응답 설정
-        // response.addHeader("Authorization", "Bearer " + token);
-        response.setHeader("accessToken", accessToken);
-        response.addCookie(createCookie("refreshToken", refreshToken));
+        // JSON 응답 생성
+        ObjectMapper objectMapper = new ObjectMapper();
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
         response.setStatus(HttpStatus.OK.value());
+
+        try {
+            // 응답 DTO 생성
+            TokenResponseDTO tokenResponseDTO = new TokenResponseDTO(accessToken, refreshToken);
+            String jsonResponse = objectMapper.writeValueAsString(tokenResponseDTO);
+
+            // JSON 응답 반환
+            response.getWriter().write(jsonResponse);
+        } catch (IOException e) {
+            log.error("Error writing JSON response", e);
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        }
     }
 
     @Transactional
     public void addRefreshTokenEntity(Long userId, String refreshToken, Long refreshTokenExpiresAt) {
 
-        Date date = new Date(System.currentTimeMillis() + refreshTokenExpiresAt);
+        RefreshTokenEntity refreshTokenEntity = new RefreshTokenEntity();
+        refreshTokenEntity.setUserId(userId);
+        refreshTokenEntity.setRefreshToken(refreshToken);
 
-        // 한 사용자에 대해 하나의 refreshToken만 저장
-        // 한 번에 하나의 기기만 사용한다면 문제 없으나 여러 기기를 번갈아가면서 로그인하면 매번 갱신되어 불편할 수 있음
-
-        // 해당 사용자의 Refresh Token이 DB에 이미 존재하는지 확인
-        Optional<RefreshTokenEntity> existingToken = refreshTokenRepository.findByUserId(userId);
-
-        // 존재하는 경우 갱신, 존재하지 않는 경우 새로 저장
-        if (existingToken.isPresent()) {
-            RefreshTokenEntity tokenEntity = existingToken.get();
-            tokenEntity.setRefreshToken(refreshToken);
-            tokenEntity.setRefreshTokenExpiresAt(date.toString());
-            refreshTokenRepository.saveAndFlush(tokenEntity);
-        } else {
-            RefreshTokenEntity refreshTokenEntity = new RefreshTokenEntity();
-            refreshTokenEntity.setUserId(userId);
-            refreshTokenEntity.setRefreshToken(refreshToken);
-            refreshTokenEntity.setRefreshTokenExpiresAt(date.toString());
-            refreshTokenRepository.save(refreshTokenEntity);
-        }
+        refreshTokenRepository.save(refreshTokenEntity);
     }
 
     @Override
     protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response, AuthenticationException failed) {
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-    }
-
-    private Cookie createCookie(String key, String value) {
-
-        Cookie cookie = new Cookie(key, value);
-        cookie.setMaxAge(24*60*60);
-        //cookie.setSecure(true);
-        cookie.setPath("/");
-        cookie.setHttpOnly(true);
-
-        return cookie;
     }
 }

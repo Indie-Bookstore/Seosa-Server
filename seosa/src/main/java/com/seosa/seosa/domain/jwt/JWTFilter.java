@@ -2,7 +2,6 @@ package com.seosa.seosa.domain.jwt;
 
 import com.seosa.seosa.domain.user.dto.CustomUserDetails;
 import com.seosa.seosa.domain.user.entity.User;
-import com.seosa.seosa.domain.user.entity.UserRole;
 import com.seosa.seosa.domain.user.repository.UserRepository;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
@@ -12,7 +11,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
@@ -29,10 +27,16 @@ public class JWTFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws ServletException, IOException {
 
-        // 헤더에서 access키에 담긴 토큰을 꺼냄
-        String accessToken = request.getHeader("accessToken");
+        // 헤더에서 Authorization 키에 담긴 토큰을 꺼냄
+        String header = request.getHeader("Authorization");
+        if (header == null || !header.startsWith("Bearer ")) {
+            filterChain.doFilter(request, response);  // 헤더가 없으면 다음 필터로 넘김
+            return;
+        }
+        String accessToken = header.replace("Bearer ", "");
 
         // 토큰이 없다면 다음 필터로 넘김
         if (accessToken == null) {
