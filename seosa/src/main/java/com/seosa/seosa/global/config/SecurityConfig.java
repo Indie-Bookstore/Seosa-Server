@@ -22,7 +22,8 @@ public class SecurityConfig {
     // 인증이 필요없는 URL 패턴 목록을 정의
     private static final String[] AUTH_WHITELIST = {
             "/cicd",
-            "/login"
+            "/login",
+            "/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs", "/v3/api-docs/**"
     };
 
     // cors 설정
