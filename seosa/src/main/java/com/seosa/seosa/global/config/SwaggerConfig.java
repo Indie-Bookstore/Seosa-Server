@@ -5,6 +5,8 @@ import io.swagger.v3.oas.annotations.info.Info;
 import io.swagger.v3.oas.annotations.servers.Server;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.PathItem;
+import io.swagger.v3.oas.models.Paths;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +16,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
 
 import java.util.Arrays;
+import java.util.List;
 
 @OpenAPIDefinition(
         info = @Info(title = "Seosa API", version = "v1"),
@@ -39,7 +42,14 @@ public class SwaggerConfig {
         return new OpenAPI()
                 .components(new Components()
                         .addSecuritySchemes("bearerAuth",bearerAuth))
-                .security(Arrays.asList(securityRequirement));
+                .security(Arrays.asList(securityRequirement))
+                .paths(filterPaths());
+    }
+
+    private Paths filterPaths() {
+        Paths paths = new Paths();
+        paths.addPathItem("/login", new PathItem()); // 로그인 api
+        return paths;
     }
 
     @Bean
