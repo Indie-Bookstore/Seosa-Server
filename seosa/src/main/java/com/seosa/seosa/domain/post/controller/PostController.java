@@ -16,10 +16,5 @@ import org.springframework.web.bind.annotation.RestController;
 public class PostController {
 
 
-    /* 글 생성 */
-    @PostMapping
-    public ResponseEntity<PostResDto> writePost(@Auth User user , @RequestBody PostReqDto postReqDto){
 
-        return
-    }
 }
