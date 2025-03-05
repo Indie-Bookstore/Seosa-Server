@@ -35,6 +35,18 @@ public class SecurityConfig {
     private final CustomOAuth2UserService customOAuth2UserService;
     private final CustomSuccessHandler customSuccessHandler;
 
+    // 인증이 필요없는 URL 패턴 목록을 정의
+    private static final String[] AUTH_WHITELIST = {
+            "/local/**",   
+            "/reissue",
+            "/userInfo_DTO",
+            "/userInfo_token",
+            "/oauth2/**",
+            "/login/oauth2/code/*",
+            "/redis/**",
+            "/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs", "/v3/api-docs/**"
+    };
+
     // AuthenticationManager Bean 등록
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
@@ -46,17 +58,6 @@ public class SecurityConfig {
     public BCryptPasswordEncoder bCryptPasswordEncoder() {
         return new BCryptPasswordEncoder();
     }
-
-    // 인증이 필요 없는 URL 패턴 목록을 정의
-    private static final String[] AUTH_WHITELIST = {
-            "/local/**",   // ✅ 로컬 회원가입/로그인 관련 모든 요청 허용
-            "/reissue",
-            "/userInfo_DTO",
-            "/userInfo_token",
-            "/oauth2/**",
-            "/login/oauth2/code/*",
-            "/redis/**"
-    };
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
