@@ -6,7 +6,9 @@ import com.seosa.seosa.domain.jwt.JWTFilter;
 import com.seosa.seosa.domain.jwt.JWTUtil;
 import com.seosa.seosa.domain.token.repository.RefreshTokenRepository;
 import com.seosa.seosa.domain.user.repository.UserRepository;
+import com.seosa.seosa.global.exception.CustomAuthenticationEntryPoint;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -35,6 +37,19 @@ public class SecurityConfig {
     private final CustomOAuth2UserService customOAuth2UserService;
     private final CustomSuccessHandler customSuccessHandler;
 
+    // 인증이 필요없는 URL 패턴 목록을 정의
+    private static final String[] AUTH_WHITELIST = {
+            "/user/profile",
+            "/local/**",
+            "/reissue",
+            "/userInfo_DTO",
+            "/userInfo_token",
+            "/oauth2/**",
+            "/login/oauth2/code/*",
+            "/redis/**",
+            "/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs", "/v3/api-docs/**"
+    };
+
     // AuthenticationManager Bean 등록
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
@@ -46,17 +61,6 @@ public class SecurityConfig {
     public BCryptPasswordEncoder bCryptPasswordEncoder() {
         return new BCryptPasswordEncoder();
     }
-
-    // 인증이 필요 없는 URL 패턴 목록을 정의
-    private static final String[] AUTH_WHITELIST = {
-            "/local/**",   // ✅ 로컬 회원가입/로그인 관련 모든 요청 허용
-            "/reissue",
-            "/userInfo_DTO",
-            "/userInfo_token",
-            "/oauth2/**",
-            "/login/oauth2/code/*",
-            "/redis/**"
-    };
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -85,7 +89,10 @@ public class SecurityConfig {
                 .oauth2Login(oauth2 -> oauth2
                         .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
                         .successHandler(customSuccessHandler)
-                        .loginPage("/oauth2/authorization/kakao") // ✅ OAuth2 로그인 경로 지정
+                        .failureHandler((request, response, exception) -> {
+                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                            response.getWriter().write("{\"status\":401, \"message\":\"OAuth2 auth failed\"}");
+                        })
                 )
 
                 // ✅ 기본 LogoutFilter 제거
@@ -93,12 +100,17 @@ public class SecurityConfig {
                         .logoutUrl("/logout")
                         .logoutSuccessUrl("/logged-out")
                         .invalidateHttpSession(true)
-                        .deleteCookies("Authorization")
                         .permitAll()
                 )
 
                 // ✅ JWTFilter를 OAuth2 필터보다 먼저 실행하여 불필요한 OAuth2 리디렉트 방지
                 .addFilterBefore(new JWTFilter(jwtUtil, userRepository), UsernamePasswordAuthenticationFilter.class)
+
+
+                // ✅ 자동 Redirect 제거: 인증되지 않은 사용자는 401 반환
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint(new CustomAuthenticationEntryPoint()) // ✅ EntryPoint 추가
+                )
 
                 // ✅ 경로별 인가 작업
                 .authorizeHttpRequests(auth -> auth
