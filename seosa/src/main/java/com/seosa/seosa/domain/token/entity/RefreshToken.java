@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @RedisHash(value = "refreshToken", timeToLive = 30*86400) // TTL 30일 (86400초)
-public class RefreshTokenEntity {
+public class RefreshToken {
 
     @Id
     private String refreshToken;
@@ -25,7 +25,7 @@ public class RefreshTokenEntity {
         return refreshTokenExpiresAt.isBefore(LocalDateTime.now());
     }
 
-    public RefreshTokenEntity(String refreshToken, Long userId) {
+    public RefreshToken(String refreshToken, Long userId) {
         this.refreshToken = refreshToken;
         this.userId = userId;
     }

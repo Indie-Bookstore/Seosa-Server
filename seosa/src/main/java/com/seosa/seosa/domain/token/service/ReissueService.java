@@ -3,7 +3,7 @@ package com.seosa.seosa.domain.token.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.seosa.seosa.domain.jwt.JWTUtil;
 import com.seosa.seosa.domain.token.dto.TokenResponseDTO;
-import com.seosa.seosa.domain.token.entity.RefreshTokenEntity;
+import com.seosa.seosa.domain.token.entity.RefreshToken;
 import com.seosa.seosa.domain.token.repository.RefreshTokenRepository;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -51,12 +51,12 @@ public class ReissueService {
         }
 
         // Redis에서 refreshToken 존재 여부 확인
-        Optional<RefreshTokenEntity> refreshTokenEntityOpt = refreshTokenRepository.findByRefreshToken(refreshToken);
+        Optional<RefreshToken> refreshTokenEntityOpt = refreshTokenRepository.findByRefreshToken(refreshToken);
         if (refreshTokenEntityOpt.isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("invalid refresh token");
         }
 
-        RefreshTokenEntity refreshTokenEntity = refreshTokenEntityOpt.get();
+        RefreshToken refreshTokenEntity = refreshTokenEntityOpt.get();
         Long userId = jwtUtil.getUserId(refreshToken);
         String userRole = jwtUtil.getUserRole(refreshToken);
 
@@ -92,7 +92,7 @@ public class ReissueService {
     private void saveRefreshToken(Long userId, String refreshToken, Long refreshTokenExpiresAt) {
         LocalDateTime expiryDate = LocalDateTime.now().plusSeconds(refreshTokenExpiresAt / 1000);
 
-        RefreshTokenEntity refreshTokenEntity = new RefreshTokenEntity();
+        RefreshToken refreshTokenEntity = new RefreshToken();
         refreshTokenEntity.setUserId(userId);
         refreshTokenEntity.setRefreshToken(refreshToken);
         refreshTokenEntity.setRefreshTokenExpiresAt(expiryDate);

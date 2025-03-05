@@ -1,4 +1,4 @@
-package com.seosa.seosa.domain.auth.local.Service;
+package com.seosa.seosa.domain.auth.local.service;
 
 import com.seosa.seosa.domain.auth.local.dto.SignupDTO;
 import com.seosa.seosa.domain.user.entity.User;
