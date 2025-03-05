@@ -100,6 +100,7 @@ public class SecurityConfig {
                         .logoutUrl("/logout")
                         .logoutSuccessUrl("/logged-out")
                         .invalidateHttpSession(true)
+                        .deleteCookies("Authorization")
                         .permitAll()
                 )
 
