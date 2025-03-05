@@ -1,69 +1,117 @@
 package com.seosa.seosa.global.config;
 
+import com.seosa.seosa.domain.auth.oauth.CustomOAuth2UserService;
+import com.seosa.seosa.domain.auth.oauth.CustomSuccessHandler;
+import com.seosa.seosa.domain.jwt.JWTFilter;
+import com.seosa.seosa.domain.jwt.JWTUtil;
+import com.seosa.seosa.domain.token.repository.RefreshTokenRepository;
+import com.seosa.seosa.domain.user.repository.UserRepository;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.util.Arrays;
-import java.util.List;
+import java.util.Collections;
 
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
 
+    private final AuthenticationConfiguration authenticationConfiguration;
+    private final JWTUtil jwtUtil;
+    private final UserRepository userRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
+    private final CustomOAuth2UserService customOAuth2UserService;
+    private final CustomSuccessHandler customSuccessHandler;
+
     // 인증이 필요없는 URL 패턴 목록을 정의
     private static final String[] AUTH_WHITELIST = {
-            "/cicd",
-            "/login",
+            "/local/**",   
+            "/reissue",
+            "/userInfo_DTO",
+            "/userInfo_token",
+            "/oauth2/**",
+            "/login/oauth2/code/*",
+            "/redis/**",
             "/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs", "/v3/api-docs/**"
     };
 
-    // cors 설정
+    // AuthenticationManager Bean 등록
     @Bean
-    CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOriginPatterns(Arrays.asList(
-                "http://localhost:3000")); // 프론트 localhost 허용 , 포트 번호 다르다면 추가하거나 *로 하면 됩니다.
-        configuration.setAllowedMethods(List.of("*"));
-        configuration.setAllowedHeaders(List.of("*"));
-        configuration.setAllowCredentials(true);
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
+        return configuration.getAuthenticationManager();
+    }
 
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
-
-        return source;
+    // 암호화 인코더 추가
+    @Bean
+    public BCryptPasswordEncoder bCryptPasswordEncoder() {
+        return new BCryptPasswordEncoder();
     }
 
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        // http의 특정 보안 구성을 비활성화
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable()) // CSRF 토큰 비활성화
-                .formLogin(formLogin -> formLogin.disable()) // 폼 로그인 비활성화 (JWT 사용)
-                .httpBasic(httpBasic -> httpBasic.disable()) // HTTP 기본 인증 비활성화
-                .cors(corsConfigurer -> corsConfigurer.configurationSource(corsConfigurationSource()))
-                .sessionManagement(session -> {
-                    // 세션 사용하지 않음 (Stateless)
-                    session.sessionCreationPolicy(SessionCreationPolicy.STATELESS);
-                });
-        // 아직 회원가입 / 로그인 관련 에러 핸들링이 구현되어있지 않습니다. 추가하셔야해요.
+                // ✅ CORS 설정
+                .cors(cors -> cors.configurationSource(request -> {
+                    CorsConfiguration configuration = new CorsConfiguration();
+                    configuration.setAllowedOrigins(Collections.singletonList("http://localhost:3000"));
+                    configuration.setAllowedMethods(Collections.singletonList("*"));
+                    configuration.setAllowCredentials(true);
+                    configuration.setAllowedHeaders(Collections.singletonList("*"));
+                    configuration.setExposedHeaders(Collections.singletonList("Authorization"));
+                    return configuration;
+                }))
 
-        http.authorizeHttpRequests(auth -> {
-            // AUTH_WHITELIST에 정의된 URL은 모든 사용자에게 접근 허용
-            auth.requestMatchers(AUTH_WHITELIST).permitAll();
-            // 그 외의 요청은 인증 필요
-            auth.anyRequest().authenticated();
-        });
+                // ✅ CSRF 비활성화
+                .csrf(csrf -> csrf.disable())
+
+                // ✅ Form 로그인 비활성화
+                .formLogin(auth -> auth.disable())
+
+                // ✅ HTTP Basic 인증 비활성화
+                .httpBasic(auth -> auth.disable())
+
+                // ✅ OAuth2 로그인 설정 (카카오 로그인 경로만 허용)
+                .oauth2Login(oauth2 -> oauth2
+                        .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
+                        .successHandler(customSuccessHandler)
+                        .loginPage("/oauth2/authorization/kakao") // ✅ OAuth2 로그인 경로 지정
+                )
+
+                // ✅ 기본 LogoutFilter 제거
+                .logout(logout -> logout
+                        .logoutUrl("/logout")
+                        .logoutSuccessUrl("/logged-out")
+                        .invalidateHttpSession(true)
+                        .deleteCookies("Authorization")
+                        .permitAll()
+                )
+
+                // ✅ JWTFilter를 OAuth2 필터보다 먼저 실행하여 불필요한 OAuth2 리디렉트 방지
+                .addFilterBefore(new JWTFilter(jwtUtil, userRepository), UsernamePasswordAuthenticationFilter.class)
+
+                // ✅ 경로별 인가 작업
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(AUTH_WHITELIST).permitAll()
+                        .requestMatchers("/admin").hasRole("ADMIN")
+                        .anyRequest().authenticated()
+                )
+
+                // ✅ JWT 기반 STATELESS 설정
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
         return http.build();
     }
 }
-
