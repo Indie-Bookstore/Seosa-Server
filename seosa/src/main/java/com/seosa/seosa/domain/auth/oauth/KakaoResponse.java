@@ -1,6 +1,10 @@
 package com.seosa.seosa.domain.auth.oauth;
 
+import com.seosa.seosa.global.exception.CustomException;
+import com.seosa.seosa.global.exception.ErrorCode;
+
 import java.util.Map;
+import java.util.Optional;
 
 public class KakaoResponse implements OAuth2Response {
 
@@ -17,21 +21,33 @@ public class KakaoResponse implements OAuth2Response {
 
     @Override
     public String getProviderId() {
-        return String.valueOf(attributes.get("id"));
+        try {
+            return String.valueOf(attributes.get("id"));
+        } catch (Exception e) {
+            throw new CustomException(ErrorCode.OAUTH2_PROVIDER_ERROR, "Failed to extract provider ID");
+        }
     }
 
     @Override
     public String getEmail() {
-        Map<String, Object> kakaoAccount = (Map<String, Object>) attributes.get("kakao_account");
-        return kakaoAccount != null ? (String) kakaoAccount.get("email") : null;
+        try {
+            return Optional.ofNullable((Map<String, Object>) attributes.get("kakao_account"))
+                    .map(acc -> (String) acc.get("email"))
+                    .orElseThrow(() -> new CustomException(ErrorCode.OAUTH2_EMAIL_NOT_FOUND));
+        } catch (Exception e) {
+            throw new CustomException(ErrorCode.OAUTH2_PROVIDER_ERROR, "Failed to extract email");
+        }
     }
 
     @Override
     public String getProfileImageUrl() {
-        Map<String, Object> kakaoAccount = (Map<String, Object>) attributes.get("kakao_account");
-        if (kakaoAccount == null) return null;
-
-        Map<String, Object> profile = (Map<String, Object>) kakaoAccount.get("profile");
-        return profile != null ? (String) profile.get("profile_image_url") : null;
+        try {
+            return Optional.ofNullable((Map<String, Object>) attributes.get("kakao_account"))
+                    .map(acc -> (Map<String, Object>) acc.get("profile"))
+                    .map(profile -> (String) profile.get("profile_image_url"))
+                    .orElse(null);
+        } catch (Exception e) {
+            throw new CustomException(ErrorCode.OAUTH2_PROVIDER_ERROR, "Failed to extract profile image URL");
+        }
     }
 }

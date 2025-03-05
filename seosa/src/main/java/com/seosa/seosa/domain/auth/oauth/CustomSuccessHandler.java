@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.seosa.seosa.domain.jwt.JWTUtil;
 import com.seosa.seosa.domain.token.service.RefreshTokenService;
 import com.seosa.seosa.domain.user.dto.CustomUserDetails;
+import com.seosa.seosa.global.exception.CustomException;
+import com.seosa.seosa.global.exception.ErrorCode;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -20,6 +22,7 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
     private final JWTUtil jwtUtil;
     private final RefreshTokenService refreshTokenService;
+    private final ObjectMapper objectMapper = new ObjectMapper(); // ✅ ObjectMapper 인스턴스 재사용
 
     public CustomSuccessHandler(JWTUtil jwtUtil, RefreshTokenService refreshTokenService) {
         this.jwtUtil = jwtUtil;
@@ -30,31 +33,34 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication)
             throws IOException, ServletException {
 
-        // 🔹 OAuth2User 정보를 CustomUserDetails로 변환
-        CustomUserDetails customUserDetails = (CustomUserDetails) authentication.getPrincipal();
+        try {
+            CustomUserDetails customUserDetails = (CustomUserDetails) authentication.getPrincipal();
+            Long userId = customUserDetails.getUserId();
+            String role = customUserDetails.getAuthorities().iterator().next().getAuthority();
 
-        // 🔹 JWT 생성 (accessToken & refreshToken)
-        Long userId = customUserDetails.getUserId();
-        String role = customUserDetails.getAuthorities().iterator().next().getAuthority();
+            String accessToken = createToken("access", userId, role);
+            String refreshToken = createToken("refresh", userId, role);
 
-        String accessToken = jwtUtil.createJwt("access", userId, role, 3600L); // 1시간 유효
-        String refreshToken = jwtUtil.createJwt("refresh", userId, role, 30*24*3600L); // 30일 유효
+            refreshTokenService.saveRefreshToken(userId, refreshToken);
 
-        // 🔹 Redis에 Refresh Token 저장
-        refreshTokenService.saveRefreshToken(userId, refreshToken, 30*24*3600L);
+            // ✅ JSON 응답 설정
+            Map<String, String> responseBody = Map.of(
+                    "message", "OAuth2 login successful",
+                    "accessToken", accessToken,
+                    "refreshToken", refreshToken
+            );
 
-        // 🔹 JSON 응답 객체 생성
-        Map<String, String> responseBody = new HashMap<>();
-        responseBody.put("message", "OAuth2 login successful");
-        responseBody.put("accessToken", accessToken);
-        responseBody.put("refreshToken", refreshToken);
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
+            response.getWriter().write(objectMapper.writeValueAsString(responseBody));
 
-        // 🔹 응답 설정
-        response.setContentType("application/json");
-        response.setCharacterEncoding("UTF-8");
+        } catch (Exception e) {
+            throw new CustomException(ErrorCode.OAUTH2_AUTHENTICATION_FAILED, "OAuth2 authentication success handling failed");
+        }
+    }
 
-        // 🔹 JSON 변환 후 응답 출력
-        ObjectMapper objectMapper = new ObjectMapper();
-        response.getWriter().write(objectMapper.writeValueAsString(responseBody));
+    private String createToken(String category, Long userId, String role) {
+        return jwtUtil.createJwt(category, userId, role);
     }
 }
+
