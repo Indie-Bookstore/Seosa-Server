@@ -6,7 +6,9 @@ import com.seosa.seosa.domain.jwt.JWTFilter;
 import com.seosa.seosa.domain.jwt.JWTUtil;
 import com.seosa.seosa.domain.token.repository.RefreshTokenRepository;
 import com.seosa.seosa.domain.user.repository.UserRepository;
+import com.seosa.seosa.global.exception.CustomAuthenticationEntryPoint;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -37,7 +39,8 @@ public class SecurityConfig {
 
     // 인증이 필요없는 URL 패턴 목록을 정의
     private static final String[] AUTH_WHITELIST = {
-            "/local/**",   
+            "/user/profile",
+            "/local/**",
             "/reissue",
             "/userInfo_DTO",
             "/userInfo_token",
@@ -86,7 +89,10 @@ public class SecurityConfig {
                 .oauth2Login(oauth2 -> oauth2
                         .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
                         .successHandler(customSuccessHandler)
-                        .loginPage("/oauth2/authorization/kakao") // ✅ OAuth2 로그인 경로 지정
+                        .failureHandler((request, response, exception) -> {
+                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                            response.getWriter().write("{\"status\":401, \"message\":\"OAuth2 auth failed\"}");
+                        })
                 )
 
                 // ✅ 기본 LogoutFilter 제거
@@ -100,6 +106,12 @@ public class SecurityConfig {
 
                 // ✅ JWTFilter를 OAuth2 필터보다 먼저 실행하여 불필요한 OAuth2 리디렉트 방지
                 .addFilterBefore(new JWTFilter(jwtUtil, userRepository), UsernamePasswordAuthenticationFilter.class)
+
+
+                // ✅ 자동 Redirect 제거: 인증되지 않은 사용자는 401 반환
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint(new CustomAuthenticationEntryPoint()) // ✅ EntryPoint 추가
+                )
 
                 // ✅ 경로별 인가 작업
                 .authorizeHttpRequests(auth -> auth
