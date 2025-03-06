@@ -29,4 +29,12 @@ public class PostController {
                 .body(postResDto);
     }
 
+    /* 글 조회 api */
+    @GetMapping("/{postId}")
+    @Operation(summary = "글 조회", description = "글을 조회합니다.")
+    public ResponseEntity<PostResDto> getPost(@AuthUser User user , @PathVariable("postId") Long postId){
+        PostResDto postResDto = postService.getPost(user , postId);
+        return ResponseEntity.ok(postResDto);
+    }
+
 }

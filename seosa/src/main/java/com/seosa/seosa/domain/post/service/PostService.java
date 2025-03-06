@@ -76,4 +76,28 @@ public class PostService {
 
         return postResDto;
     }
+
+    /*글 조회 api*/
+    public PostResDto getPost(User user, Long postId) {
+        Post post = postRepository.findBypostIdAnduserId(postId , user.getUserId())
+                .orElseThrow(() -> new CustomException(ErrorCode.POST_NOT_FOUND));
+        Bookstore bookstore = bookstoreRepository.findByBookstoreId(post.getBookstore().getBookstoreId())
+                .orElseThrow(() -> new CustomException(ErrorCode.BOOKSTORE_NOT_FOUND));
+
+        List<Content> contents = contentRepository.findByPostId(postId);
+        List<Product> products = productRepository.findByBookstoreId(bookstore.getBookstoreId());
+
+        BookstoreResDto bookstoreResDto = BookstoreResDto.to(bookstore);
+        List<ContentResDto> contentResDtos = contents.stream()
+                .map(content -> ContentResDto.to(content))
+                .collect(Collectors.toList());
+        List<ProductResDto> productResDtos = products.stream()
+                .map(product -> ProductResDto.to(product))
+                .collect(Collectors.toList());
+
+        PostResDto postResDto = PostResDto.to(post , bookstoreResDto , contentResDtos , productResDtos);
+
+        return postResDto;
+
+    }
 }

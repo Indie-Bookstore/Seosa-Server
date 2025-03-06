@@ -39,5 +39,6 @@ public class Product {
         this.price = price;
         this.productImg = productImg;
         this.description = description;
+        this.bookstore = bookstore;
     }
 }
