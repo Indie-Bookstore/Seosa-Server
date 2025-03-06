@@ -27,21 +27,17 @@ public class Product {
     private String productImg;
 
     @Column(length = 200)
-    private String manual;
+    private String description;
 
     @ManyToOne
     @JoinColumn(name = "bookstore_id")
     private Bookstore bookstore;
 
-    @ManyToOne
-    @JoinColumn(name = "post_id")
-    private Post post;
-
     @Builder
-    public Product(String productName , int price , String productImg , String manual){
+    public Product(String productName , int price , String productImg , String description , Bookstore bookstore){
         this.productName = productName;
         this.price = price;
         this.productImg = productImg;
-        this.manual = manual;
+        this.description = description;
     }
 }

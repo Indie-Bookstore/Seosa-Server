@@ -1,6 +1,5 @@
 package com.seosa.seosa.domain.bookstore.entity;
 
-import com.seosa.seosa.domain.comment.entity.Comment;
 import com.seosa.seosa.domain.post.entity.Post;
 import com.seosa.seosa.domain.product.entity.Product;
 import jakarta.persistence.*;
@@ -40,7 +39,7 @@ public class Bookstore {
     private String phoneNumber;
 
     @Column(length = 200)
-    private String IG_Address;
+    private String instagramLink;
 
     @OneToMany(mappedBy = "bookstore", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Post> posts = new ArrayList<>();
@@ -50,13 +49,13 @@ public class Bookstore {
 
 
     @Builder
-    public Bookstore (String address , String detailedAddress , String postalcode , String openDays , String openHours , String phoneNumber , String IG_Address){
+    public Bookstore (String address , String detailedAddress , String postalcode , String openDays , String openHours , String phoneNumber , String instagramLink){
         this.address = address;
         this.detailedAddress = detailedAddress;
         this.postalcode = postalcode;
         this.openDays = openDays;
         this.openHours = openHours;
         this.phoneNumber = phoneNumber;
-        this.IG_Address = IG_Address;
+        this.instagramLink = instagramLink;
     }
 }

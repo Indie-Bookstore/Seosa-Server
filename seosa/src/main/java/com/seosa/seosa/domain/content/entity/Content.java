@@ -32,9 +32,11 @@ public class Content {
     private Post post;
 
     @Builder
-    public Content(String body , int order_index){
+    public Content(ContentType contentType ,String body , int order_index ,Post post ){
+        this.contentType = contentType;
         this.body = body;
         this.order_index = order_index;
+        this.post = post;
     }
 
 }
