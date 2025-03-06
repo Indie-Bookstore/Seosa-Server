@@ -100,4 +100,18 @@ public class PostService {
         return postResDto;
 
     }
+
+    /* 글 삭제 */
+    public String deletePost(User user, Long postId) {
+        Post post = postRepository.findBypostIdAnduserId(postId , user.getUserId())
+                .orElseThrow(() -> new CustomException(ErrorCode.POST_NOT_FOUND));
+
+        if(!post.getUser().getUserId().equals(user.getUserId())){
+            throw new CustomException(ErrorCode.INVALID_ACCESS);
+        }
+
+        postRepository.delete(post);
+
+        return "해당 글이 삭제되었습니다.";
+    }
 }

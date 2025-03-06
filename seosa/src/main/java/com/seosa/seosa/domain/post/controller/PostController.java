@@ -37,4 +37,12 @@ public class PostController {
         return ResponseEntity.ok(postResDto);
     }
 
+    /* 글 삭제*/
+    @DeleteMapping("/{postId}")
+    @Operation(summary = "글 삭제", description = "글을 삭제합니다.")
+    public ResponseEntity<String> deletePost(@AuthUser User user , @PathVariable("postId") Long postId){
+        String res = postService.deletePost(user , postId);
+        return ResponseEntity.ok(res);
+    }
+
 }
