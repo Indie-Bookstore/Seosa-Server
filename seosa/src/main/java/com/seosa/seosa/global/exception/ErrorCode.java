@@ -30,7 +30,13 @@ public enum ErrorCode {
     OAUTH2_AUTHENTICATION_FAILED(HttpStatus.UNAUTHORIZED, "OAuth2 인증에 실패했습니다."),
     OAUTH2_PROVIDER_ERROR(HttpStatus.BAD_REQUEST, "OAuth2 제공자의 응답 처리 중 오류가 발생했습니다."),
     OAUTH2_EMAIL_NOT_FOUND(HttpStatus.BAD_REQUEST, "소셜 로그인 계정에서 이메일 정보를 가져올 수 없습니다."),
-    UNSUPPORTED_OAUTH_PROVIDER(HttpStatus.BAD_REQUEST, "지원되지 않는 OAuth2 제공자입니다.");
+    UNSUPPORTED_OAUTH_PROVIDER(HttpStatus.BAD_REQUEST, "지원되지 않는 OAuth2 제공자입니다."),
+
+    // 서점 관련 에러
+    BOOKSTORE_NOT_FOUND(HttpStatus.NOT_FOUND , "해당 서점을 찾을 수 없습니다."),
+    // 글 관련 에러
+    INVALID_ACCESS(HttpStatus.BAD_REQUEST , "접근 권한이 없는 사용자입니다."),
+    POST_NOT_FOUND(HttpStatus.NOT_FOUND , "해당 포스트를 찾을 수 없습니다.");
 
 
 

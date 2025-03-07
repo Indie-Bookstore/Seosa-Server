@@ -44,9 +44,11 @@ public class Post extends BaseTimeEntity {
     private List<Content> contents = new ArrayList<>();
 
     @Builder
-    public Post(String title , String location){
+    public Post(String title , String location , Bookstore bookstore , User user){
         this.title = title;
         this.location = location;
+        this.bookstore = bookstore;
+        this.user = user;
     }
 
 
