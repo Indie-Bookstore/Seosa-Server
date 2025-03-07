@@ -65,6 +65,9 @@ jobs:
           key: ${{ secrets.EC2_PRIVATE_KEY }}
           script_stop: true
           script: |
+            # 명령어 실행 로그 숨기기
+            set +x
+            
             echo "🔄 배포를 시작합니다..."
 
             # Redis 컨테이너 실행 (이미 실행 중이면 유지)
@@ -93,7 +96,7 @@ jobs:
 
             echo "✅ 배포 완료! 실행 상태 확인을 시작합니다..."
 
-            # ✅ Redis 컨테이너 상태 확인
+            # Redis 컨테이너 상태 확인
             echo "🔍 Redis 컨테이너 상태 확인 중..."
             if docker ps | grep -q seosa-redis; then
               echo "✅ Redis가 정상적으로 실행 중입니다!"
@@ -102,7 +105,7 @@ jobs:
               exit 1
             fi
 
-            # ✅ 애플리케이션 컨테이너 상태 확인
+            # 애플리케이션 컨테이너 상태 확인
             echo "🔍 애플리케이션 컨테이너 상태 확인 중..."
             if docker ps | grep -q seosa-server; then
               echo "✅ 애플리케이션이 정상적으로 실행 중입니다!"
@@ -111,7 +114,7 @@ jobs:
               exit 1
             fi
 
-            # ✅ Redis PING 테스트
+            # Redis PING 테스트
             echo "🔄 Redis PING 테스트 중..."
             REDIS_PING=$(docker exec seosa-redis redis-cli ping)
             if [ "$REDIS_PING" = "PONG" ]; then
@@ -121,6 +124,6 @@ jobs:
               exit 1
             fi
 
-            # ✅ 애플리케이션 로그 출력 (최근 20줄)
+            # 애플리케이션 로그 출력 (최근 20줄)
             echo "📜 애플리케이션 로그 출력 (최근 20줄)"
             docker logs --tail 20 seosa-server
