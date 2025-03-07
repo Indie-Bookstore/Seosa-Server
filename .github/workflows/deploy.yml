@@ -65,7 +65,18 @@ jobs:
           key: ${{ secrets.EC2_PRIVATE_KEY }}
           script_stop: true
           script: |
+            # Redis 컨테이너 실행 (이미 실행 중이면 유지)
+            docker ps -q --filter "name=seosa-redis" | grep -q . || docker run -d --name seosa-redis -p 6379:6379 redis:latest
+
+            # 기존 애플리케이션 컨테이너 중지 및 삭제
             docker stop seosa-server || true
             docker rm seosa-server || true
+
+            # 최신 Docker 이미지 가져오기
             docker pull ${{ steps.login-ecr.outputs.registry }}/seosa-server:latest
-            docker run -d --name seosa-server -p 8080:8080 ${{ steps.login-ecr.outputs.registry }}/seosa-server:latest
+
+            # 애플리케이션 컨테이너 실행 (Redis와 연결)
+            docker run -d --name seosa-server --link seosa-redis -p 8080:8080 \
+              -e SPRING_REDIS_HOST=seosa-redis \
+              -e SPRING_REDIS_PORT=6379 \
+              ${{ steps.login-ecr.outputs.registry }}/seosa-server:latest
