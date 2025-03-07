@@ -55,7 +55,7 @@ public class ReissueService {
 
         refreshTokenService.saveRefreshToken(userId, newRefreshToken);
 
-        TokenResponseDTO tokenResponseDTO = new TokenResponseDTO(newAccessToken, newRefreshToken);
+        TokenResponseDTO tokenResponseDTO = new TokenResponseDTO("reissue successful", newAccessToken, newRefreshToken);
         return ResponseEntity.ok(tokenResponseDTO);
     }
 

@@ -10,12 +10,10 @@ public enum ErrorCode {
 
     // User
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "회원이 존재하지 않습니다."),
+    PASSWORD_MISMATCH(HttpStatus.BAD_REQUEST, "비밀번호가 일치하지 않습니다."),
 
     // 회원가입 및 로그인 관련 에러
     INVALID_PASSWORD(HttpStatus.UNAUTHORIZED, "비밀번호가 올바르지 않습니다."),
-    EMAIL_REQUIRED(HttpStatus.BAD_REQUEST, "이메일은 필수 입력 항목입니다."),
-    PASSWORD_REQUIRED(HttpStatus.BAD_REQUEST, "비밀번호는 필수 입력 항목입니다."),
-    NICKNAME_REQUIRED(HttpStatus.BAD_REQUEST, "닉네임은 필수 입력 항목입니다."),
     DUPLICATE_EMAIL(HttpStatus.CONFLICT, "이미 존재하는 이메일입니다."),
     INVALID_ROLE_CODE(HttpStatus.BAD_REQUEST, "잘못된 코드입니다."),
 

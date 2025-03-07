@@ -26,14 +26,6 @@ public class LoginService {
 
     public LoginResponseDTO login(LoginDTO request) {
 
-        // 이메일 및 비밀번호 검증
-        if (request.getEmail() == null || request.getEmail().isEmpty()) {
-            throw new CustomException(ErrorCode.EMAIL_REQUIRED);
-        }
-        if (request.getPassword() == null || request.getPassword().isEmpty()) {
-            throw new CustomException(ErrorCode.PASSWORD_REQUIRED);
-        }
-
         // DB에서 이메일 존재 여부 확인
         if(!userRepository.existsByEmail(request.getEmail())) {
             throw new CustomException(ErrorCode.USER_NOT_FOUND);

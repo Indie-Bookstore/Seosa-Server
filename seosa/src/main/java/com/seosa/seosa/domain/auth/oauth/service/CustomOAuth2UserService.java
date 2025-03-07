@@ -1,4 +1,4 @@
-package com.seosa.seosa.domain.auth.oauth;
+package com.seosa.seosa.domain.auth.oauth.service;
 
 import com.seosa.seosa.domain.auth.oauth.dto.KakaoResponse;
 import com.seosa.seosa.domain.auth.oauth.dto.OAuth2Response;

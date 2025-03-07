@@ -31,9 +31,6 @@ public class User extends BaseTimeEntity {
     @Enumerated(EnumType.STRING)
     private UserRole userRole;
 
-    @Column(length = 100)
-    private String userRoleCode;
-
     @Column(length = 1024)
     private String profileImage;
 
@@ -51,12 +48,11 @@ public class User extends BaseTimeEntity {
 
     @Builder
     public User(String email, String nickname, String password, UserRole userRole,
-                String userRoleCode, String profileImage, AuthProvider provider, String providerId) {
+                String profileImage, AuthProvider provider, String providerId) {
         this.email = email;
         this.nickname = nickname;
         this.password = password;
         this.userRole = userRole;
-        this.userRoleCode = userRoleCode;
         this.profileImage = profileImage;
         this.provider = provider;
         this.providerId = providerId;
@@ -65,5 +61,14 @@ public class User extends BaseTimeEntity {
     public void updateOAuthSignupInfo(String nickname, UserRole userRole) {
         this.nickname = nickname;
         this.userRole = userRole;
+    }
+
+    public void updateProfile(String nickname, String profileImage) {
+        this.nickname = nickname;
+        this.profileImage = profileImage;
+    }
+
+    public void updatePassword(String newPassword) {
+        this.password = newPassword;
     }
 }

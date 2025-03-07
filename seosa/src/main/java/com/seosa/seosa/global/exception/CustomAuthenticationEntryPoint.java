@@ -16,28 +16,22 @@ import java.nio.charset.StandardCharsets;
 @Component
 public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
-    private final ObjectMapper objectMapper = new ObjectMapper(); // JSON 변환을 위한 ObjectMapper
-
     @Override
-    public void commence(HttpServletRequest request,
-                         HttpServletResponse response,
-                         AuthenticationException authException) throws IOException, ServletException {
+    public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException)
+            throws IOException, ServletException {
 
-        // ✅ ErrorResponse 생성
-        ErrorResponse errorResponse = ErrorResponse.builder()
-                .status(ErrorCode.TOKEN_NOT_PROVIDED.getStatus()) // 401
-                .code(ErrorCode.TOKEN_NOT_PROVIDED.name()) // "TOKEN_NOT_PROVIDED"
-                .message(ErrorCode.TOKEN_NOT_PROVIDED.getMessage()) // "토큰이 제공되지 않았습니다."
-                .build();
+        // ✅ `MethodArgumentNotValidException` 발생 여부 확인 후 400 응답 처리
+        if (request.getAttribute("org.springframework.validation.BindingResult") != null) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            response.setContentType("application/json; charset=utf-8");
+            response.getWriter().write("{ \"status\": \"BAD_REQUEST\", \"message\": \"요청 데이터가 유효하지 않습니다.\" }");
+            return;
+        }
 
-        // ✅ JSON 변환
-        String jsonResponse = objectMapper.writeValueAsString(errorResponse);
-
-        // ✅ HTTP 응답 설정 (UTF-8 인코딩 추가)
-        response.setContentType("application/json; charset=UTF-8"); // 🔥 인코딩 추가
-        response.setCharacterEncoding(StandardCharsets.UTF_8.name()); // 🔥 UTF-8 설정
-        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // 401 Unauthorized
-        response.getWriter().write(jsonResponse);
+        // ✅ 기본적으로 토큰 미제공 시 401 반환
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("application/json; charset=utf-8");
+        response.getWriter().write("{ \"status\": \"UNAUTHORIZED\", \"code\": \"INVALID_REQUEST\", \"message\": \"요청 형식에 오류가 있습니다.\" }");
     }
 }
 

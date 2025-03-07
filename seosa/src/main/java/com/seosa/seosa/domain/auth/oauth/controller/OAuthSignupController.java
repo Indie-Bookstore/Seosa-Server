@@ -1,16 +1,13 @@
-package com.seosa.seosa.domain.auth.oauth;
+package com.seosa.seosa.domain.auth.oauth.controller;
 
 import com.seosa.seosa.domain.auth.oauth.dto.OAuthSignupRequest;
-import com.seosa.seosa.domain.auth.oauth.dto.OAuthSignupResponse;
 import com.seosa.seosa.domain.jwt.JWTUtil;
+import com.seosa.seosa.domain.token.dto.TokenResponseDTO;
 import com.seosa.seosa.domain.token.service.RefreshTokenService;
 import com.seosa.seosa.domain.user.entity.User;
-import com.seosa.seosa.domain.user.entity.UserRole;
-import com.seosa.seosa.domain.user.repository.UserRepository;
 import com.seosa.seosa.domain.user.service.UserService;
 import com.seosa.seosa.global.annotation.AuthUser;
-import com.seosa.seosa.global.exception.CustomException;
-import com.seosa.seosa.global.exception.ErrorCode;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -26,7 +23,8 @@ public class OAuthSignupController {
     private final RefreshTokenService refreshTokenService;
 
     @PatchMapping("/signup")
-    public ResponseEntity<OAuthSignupResponse> completeOAuthSignup(
+    @Operation(summary = "카카오 회원가입", description = "카카오 유저가 닉네임과 코드를 입력해 회원가입합니다.")
+    public ResponseEntity<TokenResponseDTO> completeOAuthSignup(
             @AuthUser User user, @Valid @RequestBody OAuthSignupRequest request) {
 
         userService.updateOAuthSignup(user.getUserId(), request.getNickname(), request.getUserRoleCode());
@@ -37,10 +35,7 @@ public class OAuthSignupController {
 
         refreshTokenService.saveRefreshToken(user.getUserId(), refreshToken);
 
-        return ResponseEntity.ok(new OAuthSignupResponse(
-                "OAuth2 signup successful",
-                accessToken,
-                refreshToken
-        ));
+        TokenResponseDTO tokenResponseDTO = new TokenResponseDTO("OAuth2 signup successful", accessToken, refreshToken);
+        return ResponseEntity.ok(tokenResponseDTO);
     }
 }

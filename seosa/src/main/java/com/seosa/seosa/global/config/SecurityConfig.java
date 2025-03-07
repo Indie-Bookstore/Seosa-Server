@@ -1,14 +1,12 @@
 package com.seosa.seosa.global.config;
 
-import com.seosa.seosa.domain.auth.oauth.CustomOAuth2UserService;
+import com.seosa.seosa.domain.auth.oauth.service.CustomOAuth2UserService;
 import com.seosa.seosa.domain.auth.oauth.CustomSuccessHandler;
 import com.seosa.seosa.domain.jwt.JWTFilter;
 import com.seosa.seosa.domain.jwt.JWTUtil;
 import com.seosa.seosa.domain.token.repository.RefreshTokenRepository;
 import com.seosa.seosa.domain.user.repository.UserRepository;
 import com.seosa.seosa.global.exception.CustomAuthenticationEntryPoint;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,7 +19,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
 
 import java.util.Collections;
 
@@ -111,7 +108,9 @@ public class SecurityConfig {
                 // ✅ 경로별 인가 작업
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(AUTH_WHITELIST).permitAll()
-                        .requestMatchers("/admin").hasRole("ADMIN")
+                        .requestMatchers("/local/login").permitAll()
+                        // ADMIN, EDITOR: POST API 접근 가능 / ADMIN: FAQ API 접근 가능
+                        //.requestMatchers("/admin").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
 
