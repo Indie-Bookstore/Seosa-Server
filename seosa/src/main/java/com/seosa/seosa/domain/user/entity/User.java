@@ -58,7 +58,12 @@ public class User extends BaseTimeEntity {
         this.userRole = userRole;
         this.userRoleCode = userRoleCode;
         this.profileImage = profileImage;
-        this.provider = provider; // ✅ 추가
-        this.providerId = providerId; // ✅ 추가
+        this.provider = provider;
+        this.providerId = providerId;
+    }
+
+    public void updateOAuthSignupInfo(String nickname, UserRole userRole) {
+        this.nickname = nickname;
+        this.userRole = userRole;
     }
 }

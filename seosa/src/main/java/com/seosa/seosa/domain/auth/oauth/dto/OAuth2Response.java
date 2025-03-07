@@ -1,4 +1,4 @@
-package com.seosa.seosa.domain.auth.oauth;
+package com.seosa.seosa.domain.auth.oauth.dto;
 
 public interface OAuth2Response {
 

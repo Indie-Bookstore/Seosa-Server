@@ -42,8 +42,6 @@ public class SecurityConfig {
             "/user/profile",
             "/local/**",
             "/reissue",
-            "/userInfo_DTO",
-            "/userInfo_token",
             "/oauth2/**",
             "/login/oauth2/code/*",
             "/redis/**",

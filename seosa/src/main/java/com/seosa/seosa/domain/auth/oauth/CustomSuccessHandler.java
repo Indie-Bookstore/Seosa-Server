@@ -16,6 +16,7 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 @Component
 public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
@@ -36,16 +37,22 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         try {
             CustomUserDetails customUserDetails = (CustomUserDetails) authentication.getPrincipal();
             Long userId = customUserDetails.getUserId();
-            String role = customUserDetails.getAuthorities().iterator().next().getAuthority();
+            // String role = customUserDetails.getAuthorities().iterator().next().getAuthority();
+            String role = customUserDetails.getUserRole();
 
-            String accessToken = createToken("access", userId, role);
-            String refreshToken = createToken("refresh", userId, role);
+            System.out.println(role);
+
+            String accessToken = jwtUtil.createJwt("access", userId, role);
+            String refreshToken = jwtUtil.createJwt("refresh", userId, role);
 
             refreshTokenService.saveRefreshToken(userId, refreshToken);
 
+            String message = Objects.equals(role, "TEMP_USER") ?
+                    "회원가입을 완료해주세요" : "OAuth2 login successful";
+
             // ✅ JSON 응답 설정
             Map<String, String> responseBody = Map.of(
-                    "message", "OAuth2 login successful",
+                    "message", message,
                     "accessToken", accessToken,
                     "refreshToken", refreshToken
             );
@@ -57,10 +64,6 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         } catch (Exception e) {
             throw new CustomException(ErrorCode.OAUTH2_AUTHENTICATION_FAILED, "OAuth2 authentication success handling failed");
         }
-    }
-
-    private String createToken(String category, Long userId, String role) {
-        return jwtUtil.createJwt(category, userId, role);
     }
 }
 

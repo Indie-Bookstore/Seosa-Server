@@ -4,6 +4,7 @@ import com.seosa.seosa.domain.auth.local.dto.SignupDTO;
 import com.seosa.seosa.domain.user.entity.User;
 import com.seosa.seosa.domain.user.entity.UserRole;
 import com.seosa.seosa.domain.user.repository.UserRepository;
+import com.seosa.seosa.domain.user.service.UserService;
 import com.seosa.seosa.global.exception.CustomException;
 import com.seosa.seosa.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +19,7 @@ public class SignupService {
 
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
+    private final UserService userService;
 
     public void signupProcess(SignupDTO signupDTO) {
         // ✅ 필수 필드 검증 (이메일, 비밀번호, 닉네임)
@@ -36,14 +38,7 @@ public class SignupService {
             throw new CustomException(ErrorCode.DUPLICATE_EMAIL);
         }
 
-        String userRoleCode = signupDTO.getUserRoleCode() == null ? "" : signupDTO.getUserRoleCode();
-        UserRole userRole = UserRole.USER;
-        switch (userRoleCode) {
-            case "" -> userRole = UserRole.USER;
-            case "adminCode158" -> userRole = UserRole.ADMIN;
-            case "editorCode185" -> userRole = UserRole.EDITOR;
-            default -> throw new CustomException(ErrorCode.INVALID_ROLE_CODE);
-        }
+        UserRole userRole = userService.determineUserRole(signupDTO.getUserRoleCode());
 
         // ✅ 회원 데이터 저장
         User user = User.builder()
