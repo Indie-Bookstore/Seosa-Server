@@ -64,10 +64,7 @@ jobs:
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_PRIVATE_KEY }}
           script_stop: true
-          script: |
-            # 명령어 실행 로그 숨기기
-            set +x
-            
+          script: |            
             echo "🔄 배포를 시작합니다..."
 
             # Redis 컨테이너 실행 (이미 실행 중이면 유지)
