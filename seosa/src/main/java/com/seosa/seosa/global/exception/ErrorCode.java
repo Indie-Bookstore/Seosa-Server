@@ -17,6 +17,7 @@ public enum ErrorCode {
     PASSWORD_REQUIRED(HttpStatus.BAD_REQUEST, "비밀번호는 필수 입력 항목입니다."),
     NICKNAME_REQUIRED(HttpStatus.BAD_REQUEST, "닉네임은 필수 입력 항목입니다."),
     DUPLICATE_EMAIL(HttpStatus.CONFLICT, "이미 존재하는 이메일입니다."),
+    INVALID_ROLE_CODE(HttpStatus.BAD_REQUEST, "잘못된 코드입니다."),
 
     // 토큰 관련 에러
     TOKEN_NOT_PROVIDED(HttpStatus.UNAUTHORIZED, "토큰이 제공되지 않았습니다."),
@@ -30,6 +31,7 @@ public enum ErrorCode {
     OAUTH2_PROVIDER_ERROR(HttpStatus.BAD_REQUEST, "OAuth2 제공자의 응답 처리 중 오류가 발생했습니다."),
     OAUTH2_EMAIL_NOT_FOUND(HttpStatus.BAD_REQUEST, "소셜 로그인 계정에서 이메일 정보를 가져올 수 없습니다."),
     UNSUPPORTED_OAUTH_PROVIDER(HttpStatus.BAD_REQUEST, "지원되지 않는 OAuth2 제공자입니다.");
+
 
 
     private final HttpStatus status;

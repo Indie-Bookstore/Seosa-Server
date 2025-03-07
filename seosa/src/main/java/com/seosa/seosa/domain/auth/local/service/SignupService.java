@@ -2,6 +2,7 @@ package com.seosa.seosa.domain.auth.local.service;
 
 import com.seosa.seosa.domain.auth.local.dto.SignupDTO;
 import com.seosa.seosa.domain.user.entity.User;
+import com.seosa.seosa.domain.user.entity.UserRole;
 import com.seosa.seosa.domain.user.repository.UserRepository;
 import com.seosa.seosa.global.exception.CustomException;
 import com.seosa.seosa.global.exception.ErrorCode;
@@ -20,13 +21,13 @@ public class SignupService {
 
     public void signupProcess(SignupDTO signupDTO) {
         // ✅ 필수 필드 검증 (이메일, 비밀번호, 닉네임)
-        if (signupDTO.getEmail() == null || signupDTO.getEmail().isEmpty()) {
+        if (signupDTO.getEmail() == null || signupDTO.getEmail().isBlank()) {
             throw new CustomException(ErrorCode.EMAIL_REQUIRED);
         }
-        if (signupDTO.getPassword() == null || signupDTO.getPassword().isEmpty()) {
+        if (signupDTO.getPassword() == null || signupDTO.getPassword().isBlank()) {
             throw new CustomException(ErrorCode.PASSWORD_REQUIRED);
         }
-        if (signupDTO.getNickname() == null || signupDTO.getNickname().isEmpty()) {
+        if (signupDTO.getNickname() == null || signupDTO.getNickname().isBlank()) {
             throw new CustomException(ErrorCode.NICKNAME_REQUIRED);
         }
 
@@ -35,13 +36,21 @@ public class SignupService {
             throw new CustomException(ErrorCode.DUPLICATE_EMAIL);
         }
 
+        String userRoleCode = signupDTO.getUserRoleCode() == null ? "" : signupDTO.getUserRoleCode();
+        UserRole userRole = UserRole.USER;
+        switch (userRoleCode) {
+            case "" -> userRole = UserRole.USER;
+            case "adminCode158" -> userRole = UserRole.ADMIN;
+            case "editorCode185" -> userRole = UserRole.EDITOR;
+            default -> throw new CustomException(ErrorCode.INVALID_ROLE_CODE);
+        }
+
         // ✅ 회원 데이터 저장
         User user = User.builder()
                 .email(signupDTO.getEmail())
                 .nickname(signupDTO.getNickname())
                 .password(bCryptPasswordEncoder.encode(signupDTO.getPassword()))
-                .userRole(signupDTO.getUserRole())
-                .userRoleCode(signupDTO.getUserRoleCode())
+                .userRole(userRole)
                 .profileImage(signupDTO.getProfileImage())
                 .build();
 

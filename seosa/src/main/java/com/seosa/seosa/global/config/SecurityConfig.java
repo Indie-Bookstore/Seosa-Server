@@ -89,10 +89,7 @@ public class SecurityConfig {
                 .oauth2Login(oauth2 -> oauth2
                         .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
                         .successHandler(customSuccessHandler)
-                        .failureHandler((request, response, exception) -> {
-                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                            response.getWriter().write("{\"status\":401, \"message\":\"OAuth2 auth failed\"}");
-                        })
+                        .loginPage("/oauth2/authorization/kakao")
                 )
 
                 // ✅ 기본 LogoutFilter 제거
