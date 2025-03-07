@@ -89,7 +89,7 @@ public class SecurityConfig {
                 .oauth2Login(oauth2 -> oauth2
                         .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
                         .successHandler(customSuccessHandler)
-                        .loginPage("/oauth2/authorization/kakao")
+                        .loginPage("/oauth2/authorization/kakao") // ✅ OAuth2 로그인 경로 지정
                 )
 
                 // ✅ 기본 LogoutFilter 제거

@@ -15,4 +15,3 @@ public class UserController {
         return "User Email: " + user.getEmail();
     }
 }
-
