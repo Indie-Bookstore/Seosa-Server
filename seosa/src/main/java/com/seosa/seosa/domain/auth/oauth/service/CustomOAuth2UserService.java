@@ -1,5 +1,7 @@
-package com.seosa.seosa.domain.auth.oauth;
+package com.seosa.seosa.domain.auth.oauth.service;
 
+import com.seosa.seosa.domain.auth.oauth.dto.KakaoResponse;
+import com.seosa.seosa.domain.auth.oauth.dto.OAuth2Response;
 import com.seosa.seosa.domain.user.dto.CustomUserDetails;
 import com.seosa.seosa.domain.user.entity.AuthProvider;
 import com.seosa.seosa.domain.user.entity.User;
@@ -44,7 +46,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                         .profileImage(oAuth2Response.getProfileImageUrl())
                         .provider(AuthProvider.KAKAO)
                         .providerId(oAuth2Response.getProviderId())
-                        .userRole(UserRole.USER)
+                        .userRole(UserRole.TEMP_USER)
                         .build()));
 
         return new CustomUserDetails(user, oAuth2User.getAttributes());

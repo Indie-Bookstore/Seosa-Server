@@ -5,6 +5,7 @@ import com.seosa.seosa.domain.auth.local.dto.LoginResponseDTO;
 import com.seosa.seosa.domain.jwt.JWTUtil;
 import com.seosa.seosa.domain.token.service.RefreshTokenService;
 import com.seosa.seosa.domain.user.dto.CustomUserDetails;
+import com.seosa.seosa.domain.user.repository.UserRepository;
 import com.seosa.seosa.global.exception.CustomException;
 import com.seosa.seosa.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -21,15 +22,13 @@ public class LoginService {
     private final AuthenticationManager authenticationManager;
     private final JWTUtil jwtUtil;
     private final RefreshTokenService refreshTokenService;
+    private final UserRepository userRepository;
 
     public LoginResponseDTO login(LoginDTO request) {
 
-        // 이메일 및 비밀번호 검증
-        if (request.getEmail() == null || request.getEmail().isEmpty()) {
-            throw new CustomException(ErrorCode.EMAIL_REQUIRED);
-        }
-        if (request.getPassword() == null || request.getPassword().isEmpty()) {
-            throw new CustomException(ErrorCode.PASSWORD_REQUIRED);
+        // DB에서 이메일 존재 여부 확인
+        if(!userRepository.existsByEmail(request.getEmail())) {
+            throw new CustomException(ErrorCode.USER_NOT_FOUND);
         }
 
         try {

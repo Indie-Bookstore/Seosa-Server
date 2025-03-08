@@ -29,19 +29,28 @@ public class JWTFilter extends OncePerRequestFilter {
         this.userRepository = userRepository;
     }
 
+    // JWT 필터에서 제외할 경로 목록
+    private boolean isExcludedFromJwtFilter(String requestURI) {
+        return requestURI.startsWith("/local") ||  // 로컬 로그인 & 회원가입
+                requestURI.startsWith("/oauth2") ||  // OAuth 로그인 & 회원가입
+                requestURI.startsWith("/reissue") ||  // 토큰 재발급
+                requestURI.startsWith("/swagger-ui") ||  // Swagger
+                requestURI.startsWith("/v3/api-docs"); // API Docs
+    }
+
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
         String requestURI = request.getRequestURI();
 
-        // ✅ 로컬 로그인 및 회원가입 요청은 JWT 검증 없이 통과
-        if (requestURI.startsWith("/local")) {
+        // JWT 검증 없이 통과
+        if (isExcludedFromJwtFilter(requestURI)) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        // ✅ 헤더에서 Authorization 키에 담긴 토큰을 꺼냄
+        // 헤더에서 Authorization 키에 담긴 토큰을 꺼냄
         String header = request.getHeader("Authorization");
         if (header == null || !header.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
@@ -50,25 +59,16 @@ public class JWTFilter extends OncePerRequestFilter {
 
         String accessToken = header.replace("Bearer ", "");
 
-        // ✅ 토큰 만료 여부 확인
+        // 토큰 만료 여부 확인
         try {
-            // ✅ 토큰 만료 여부 확인
             jwtUtil.isExpired(accessToken);
 
-            // ✅ JWT에서 userId값 획득
             Long userId = jwtUtil.getUserId(accessToken);
-
-            // ✅ DB에서 userId로 유저 조회
             User user = userRepository.findById(userId)
                     .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
-            // ✅ UserDetails에 회원 정보 객체 담기
             CustomUserDetails customUserDetails = new CustomUserDetails(user);
-
-            // ✅ 스프링 시큐리티 인증 토큰 생성
             Authentication authToken = new UsernamePasswordAuthenticationToken(customUserDetails, null, customUserDetails.getAuthorities());
-
-            // ✅ SecurityContext에 사용자 정보 등록
             SecurityContextHolder.getContext().setAuthentication(authToken);
 
             filterChain.doFilter(request, response);

@@ -55,10 +55,6 @@ public class CustomUserDetails implements UserDetails, OAuth2User {
         return user.getUserRole().toString();
     }
 
-    public String getUserRoleCode() {
-        return user.getUserRoleCode();
-    }
-
     public String getProfileImage() {
         return user.getProfileImage();
     }
