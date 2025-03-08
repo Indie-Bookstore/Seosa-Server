@@ -4,10 +4,7 @@ import com.seosa.seosa.domain.faq.entity.FAQ;
 import com.seosa.seosa.domain.post.entity.Post;
 import com.seosa.seosa.global.entity.BaseTimeEntity;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,13 +18,13 @@ public class User extends BaseTimeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long userId;
 
-    @Column(updatable = false)
+    @Column(unique = true, updatable = false)
     private String email;
 
     @Column(length = 30)
     private String nickname;
 
-    @Column(length = 50)
+    @Column(length = 500)
     private String password;
 
     @Column(nullable = false)
@@ -35,10 +32,16 @@ public class User extends BaseTimeEntity {
     private UserRole userRole;
 
     @Column(length = 100)
-    private String roleCode;
+    private String userRoleCode;
 
     @Column(length = 1024)
     private String profileImage;
+
+    @Enumerated(EnumType.STRING)  // ✅ 올바른 AuthProvider 사용
+    private AuthProvider provider;
+
+    @Column(nullable = true)
+    private String providerId; // 소셜 로그인 사용자 ID
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Post> posts = new ArrayList<>();
@@ -47,14 +50,15 @@ public class User extends BaseTimeEntity {
     private List<FAQ> faqs = new ArrayList<>();
 
     @Builder
-    public User(String email , String nickname , String password , UserRole userRole , String roleCode , String profileImage){
-       this.email = email;
-       this.nickname = nickname;
-       this.password = password;
-       this.userRole = userRole;
-       this.roleCode = roleCode;
-       this.profileImage = profileImage;
+    public User(String email, String nickname, String password, UserRole userRole,
+                String userRoleCode, String profileImage, AuthProvider provider, String providerId) {
+        this.email = email;
+        this.nickname = nickname;
+        this.password = password;
+        this.userRole = userRole;
+        this.userRoleCode = userRoleCode;
+        this.profileImage = profileImage;
+        this.provider = provider; // ✅ 추가
+        this.providerId = providerId; // ✅ 추가
     }
-
-
 }
