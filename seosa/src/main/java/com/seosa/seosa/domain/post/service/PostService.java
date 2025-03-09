@@ -42,76 +42,95 @@ public class PostService {
 
     /* 글 등록 */
     public PostResDto registerPost(User user, PostReqDto postReqDto) {
-
-        if(!user.getUserRole().equals(UserRole.ADMIN)){
-            throw new CustomException(ErrorCode.INVALID_ACCESS);
-        }
+        validateAdminAccess(user);
 
         Bookstore bookstore = BookstoreReqDto.toEntity(postReqDto);
         bookstoreRepository.save(bookstore);
 
-        Post post = PostReqDto.toEntity(postReqDto , bookstore , user);
+        Post post = PostReqDto.toEntity(postReqDto, bookstore, user);
         postRepository.save(post);
 
-        List<Content> contentList = postReqDto.getContentReqDtoList().stream()
-                .map(contentReqDto -> ContentReqDto.toEntity(contentReqDto, post))
-                .collect(Collectors.toList());
-        contentRepository.saveAll(contentList);
+        List<Content> contentList = saveContents(postReqDto.getContentReqDtoList(), post);
+        List<Product> productList = saveProducts(postReqDto.getProductReqDtoList(), bookstore);
 
-        List<Product> productList = postReqDto.getProductReqDtoList().stream()
-                .map(productReqDto -> ProductReqDto.toEntity(productReqDto,bookstore))
-                .collect(Collectors.toList());
-
-        productRepository.saveAll(productList);
-
-        BookstoreResDto bookstoreResDto = BookstoreResDto.to(bookstore);
-        List<ContentResDto> contentResDtos = contentList.stream()
-                .map(content -> ContentResDto.to(content))
-                .collect(Collectors.toList());
-        List<ProductResDto> productResDtos = productList.stream()
-                .map(product -> ProductResDto.to(product))
-                .collect(Collectors.toList());
-
-        PostResDto postResDto = PostResDto.to(post , bookstoreResDto , contentResDtos , productResDtos);
-
-        return postResDto;
+        return convertToPostResDto(post, bookstore, contentList, productList);
     }
 
-    /*글 조회 api*/
+    /* 글 조회 */
     public PostResDto getPost(User user, Long postId) {
-        Post post = postRepository.findBypostIdAnduserId(postId , user.getUserId())
-                .orElseThrow(() -> new CustomException(ErrorCode.POST_NOT_FOUND));
-        Bookstore bookstore = bookstoreRepository.findByBookstoreId(post.getBookstore().getBookstoreId())
-                .orElseThrow(() -> new CustomException(ErrorCode.BOOKSTORE_NOT_FOUND));
+        Post post = findPostByIdAndUser(postId, user.getUserId());
+        Bookstore bookstore = findBookstoreById(post.getBookstore().getBookstoreId());
 
         List<Content> contents = contentRepository.findByPostId(postId);
         List<Product> products = productRepository.findByBookstoreId(bookstore.getBookstoreId());
 
-        BookstoreResDto bookstoreResDto = BookstoreResDto.to(bookstore);
-        List<ContentResDto> contentResDtos = contents.stream()
-                .map(content -> ContentResDto.to(content))
-                .collect(Collectors.toList());
-        List<ProductResDto> productResDtos = products.stream()
-                .map(product -> ProductResDto.to(product))
-                .collect(Collectors.toList());
-
-        PostResDto postResDto = PostResDto.to(post , bookstoreResDto , contentResDtos , productResDtos);
-
-        return postResDto;
-
+        return convertToPostResDto(post, bookstore, contents, products);
     }
 
     /* 글 삭제 */
     public String deletePost(User user, Long postId) {
-        Post post = postRepository.findBypostIdAnduserId(postId , user.getUserId())
-                .orElseThrow(() -> new CustomException(ErrorCode.POST_NOT_FOUND));
+        Post post = findPostByIdAndUser(postId, user.getUserId());
 
-        if(!post.getUser().getUserId().equals(user.getUserId())){
+        if (!post.getUser().getUserId().equals(user.getUserId())) {
             throw new CustomException(ErrorCode.INVALID_ACCESS);
         }
+        // 현재 글을 삭제하면 해당 글에 포함된 서점 정보 , 해당 서점의 물품을 다 삭제하게 구현함
+        Bookstore bookstore = bookstoreRepository.findByBookstoreId(post.getBookstore().getBookstoreId())
+                        .orElseThrow(() -> new CustomException(ErrorCode.BOOKSTORE_NOT_FOUND));
+        List<Product> products = productRepository.findByBookstoreId(bookstore.getBookstoreId());
+
+        productRepository.deleteAll(products);
+        bookstoreRepository.delete(bookstore);
 
         postRepository.delete(post);
-
         return "해당 글이 삭제되었습니다.";
+    }
+
+    /* PostResDto 변환 */
+    private PostResDto convertToPostResDto(Post post, Bookstore bookstore, List<Content> contents, List<Product> products) {
+        BookstoreResDto bookstoreResDto = BookstoreResDto.to(bookstore);
+        List<ContentResDto> contentResDtos = contents.stream()
+                .map(ContentResDto::to)
+                .collect(Collectors.toList());
+        List<ProductResDto> productResDtos = products.stream()
+                .map(ProductResDto::to)
+                .collect(Collectors.toList());
+
+        return PostResDto.to(post, bookstoreResDto, contentResDtos, productResDtos);
+    }
+
+    /* 관리자 권한 확인 */
+    private void validateAdminAccess(User user) {
+        if (!user.getUserRole().equals(UserRole.ADMIN)) {
+            throw new CustomException(ErrorCode.INVALID_ACCESS);
+        }
+    }
+
+    /* postId , userId로  Post 조회 */
+    private Post findPostByIdAndUser(Long postId, Long userId) {
+        return postRepository.findBypostIdAnduserId(postId, userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.POST_NOT_FOUND));
+    }
+
+    /* Bookstore 조회 */
+    private Bookstore findBookstoreById(Long bookstoreId) {
+        return bookstoreRepository.findByBookstoreId(bookstoreId)
+                .orElseThrow(() -> new CustomException(ErrorCode.BOOKSTORE_NOT_FOUND));
+    }
+
+    /* Content 저장 */
+    private List<Content> saveContents(List<ContentReqDto> contentReqDtoList, Post post) {
+        List<Content> contentList = contentReqDtoList.stream()
+                .map(contentReqDto -> ContentReqDto.toEntity(contentReqDto, post))
+                .collect(Collectors.toList());
+        return contentRepository.saveAll(contentList);
+    }
+
+    /*  Product 저장 */
+    private List<Product> saveProducts(List<ProductReqDto> productReqDtoList, Bookstore bookstore) {
+        List<Product> productList = productReqDtoList.stream()
+                .map(productReqDto -> ProductReqDto.toEntity(productReqDto, bookstore))
+                .collect(Collectors.toList());
+        return productRepository.saveAll(productList);
     }
 }
