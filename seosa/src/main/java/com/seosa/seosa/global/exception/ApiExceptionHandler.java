@@ -1,5 +1,6 @@
 package com.seosa.seosa.global.exception;
 
+import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,6 +25,8 @@ public class ApiExceptionHandler {
     // @Valid 검증 실패 시 MethodArgumentNotValidException 처리
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidationExceptions(MethodArgumentNotValidException ex) {
+
+        System.out.println("[handleValidationExceptions] 발생");
         Map<String, String> errors = new HashMap<>();
 
         // 모든 필드 에러를 가져와서 저장
@@ -32,6 +35,25 @@ public class ApiExceptionHandler {
         }
 
         log.warn("[handleValidationExceptions] 유효성 검사 실패: {}", errors);
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ErrorResponse.builder()
+                        .status(HttpStatus.BAD_REQUEST)
+                        .code("VALIDATION_FAILED")
+                        .message("유효성 검사 실패: " + errors)
+                        .build());
+    }
+
+    // @Validated (RequestParam, PathVariable) 검증 실패 시 발생하는 예외 처리
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ErrorResponse> handleConstraintViolationException(ConstraintViolationException ex) {
+        Map<String, String> errors = new HashMap<>();
+
+        ex.getConstraintViolations().forEach(violation -> {
+            String fieldName = violation.getPropertyPath().toString();
+            errors.put(fieldName, violation.getMessage());
+        });
 
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)

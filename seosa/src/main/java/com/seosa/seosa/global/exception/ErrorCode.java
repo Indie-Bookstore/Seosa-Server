@@ -15,6 +15,7 @@ public enum ErrorCode {
     // 회원가입 및 로그인 관련 에러
     INVALID_PASSWORD(HttpStatus.UNAUTHORIZED, "비밀번호가 올바르지 않습니다."),
     DUPLICATE_EMAIL(HttpStatus.CONFLICT, "이미 존재하는 이메일입니다."),
+    DUPLICATE_NICKNAME(HttpStatus.CONFLICT, "이미 존재하는 닉네임입니다."),
     INVALID_ROLE_CODE(HttpStatus.BAD_REQUEST, "잘못된 코드입니다."),
 
     // 토큰 관련 에러

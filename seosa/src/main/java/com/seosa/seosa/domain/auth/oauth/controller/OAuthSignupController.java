@@ -22,8 +22,8 @@ public class OAuthSignupController {
     private final JWTUtil jwtUtil;
     private final RefreshTokenService refreshTokenService;
 
-    @PatchMapping("/signup")
-    @Operation(summary = "카카오 회원가입", description = "카카오 유저가 닉네임과 코드를 입력해 회원가입합니다.")
+    @PatchMapping("/signupAndLogin")
+    @Operation(summary = "카카오 회원가입/로그인", description = "카카오 유저가 회원가입/로그인합니다.")
     public ResponseEntity<TokenResponseDTO> completeOAuthSignup(
             @AuthUser User user, @Valid @RequestBody OAuthSignupRequest request) {
 
