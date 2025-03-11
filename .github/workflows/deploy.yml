@@ -22,7 +22,7 @@ jobs:
       - name: application.yml 파일 만들기
         run: |
           cd ./seosa/src/main
-          mkdir -p resources
+          mkdir resources
           cd resources
           echo "${{ secrets.APPLICATION_PROPERTIES }}" > application.yml
 
@@ -41,7 +41,7 @@ jobs:
       - name: ECR에 로그인하기
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
-
+        
       - name: Docker 이미지 생성
         run: |
           cd ./seosa
@@ -84,12 +84,11 @@ jobs:
             echo "⬇️ 최신 애플리케이션 이미지를 가져옵니다..."
             docker pull ${{ steps.login-ecr.outputs.registry }}/seosa-server:latest
 
-            # 애플리케이션 컨테이너 실행 (Nginx와 연동되도록 8081 포트에서 실행)
+            # 애플리케이션 컨테이너 실행 (Redis와 연결)
             echo "🚀 애플리케이션 컨테이너를 실행합니다..."
-            docker run -d --name seosa-server --link seosa-redis -p 8081:8081 \
+            docker run -d --name seosa-server --link seosa-redis -p 8080:8080 \
               -e SPRING_REDIS_HOST=seosa-redis \
-              -e SPRING_REDIS_PORT="6379" \
-              -e SERVER_PORT=8081 \
+              -e SPRING_REDIS_PORT=6379 \
               ${{ steps.login-ecr.outputs.registry }}/seosa-server:latest
 
             echo "✅ 배포 완료! 실행 상태 확인을 시작합니다..."
@@ -111,6 +110,20 @@ jobs:
               echo "❌ 애플리케이션이 실행되지 않았습니다! 배포 실패!"
               exit 1
             fi
+
+            # Redis PING 테스트
+            echo "🔄 Redis PING 테스트 중..."
+            REDIS_PING=$(docker exec seosa-redis redis-cli ping)
+            if [ "$REDIS_PING" = "PONG" ]; then
+              echo "✅ Redis가 정상 작동 중입니다!"
+            else
+              echo "❌ Redis에 연결할 수 없습니다! 배포 실패!"
+              exit 1
+            fi
+
+            # Nginx 설정 테스트 및 재시작
+            echo "🔄 Nginx 설정 테스트 및 재시작..."
+            sudo nginx -t && sudo systemctl restart nginx
 
             # 애플리케이션 로그 출력 (최근 20줄)
             echo "📜 애플리케이션 로그 출력 (최근 20줄)"
