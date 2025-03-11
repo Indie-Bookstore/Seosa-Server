@@ -57,15 +57,74 @@ jobs:
           cd ./seosa
           docker push ${{ steps.login-ecr.outputs.registry }}/seosa-server:latest
 
-      - name: SSH로 EC2에 접속하기
+      - name: SSH로 EC2에 접속하여 배포 및 상태 확인
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_PRIVATE_KEY }}
           script_stop: true
-          script: |
+          script: |            
+            echo "🔄 배포를 시작합니다..."
+
+            # Redis 컨테이너 실행 (이미 실행 중이면 유지)
+            if docker ps -q --filter "name=seosa-redis" | grep -q .; then
+              echo "✅ Redis가 이미 실행 중입니다."
+            else
+              echo "🚀 Redis 컨테이너를 실행합니다..."
+              docker run -d --name seosa-redis -p 6379:6379 redis:latest
+            fi
+
+            # 기존 애플리케이션 컨테이너 중지 및 삭제
+            echo "🛑 기존 애플리케이션을 중지하고 삭제합니다..."
             docker stop seosa-server || true
             docker rm seosa-server || true
+
+            # 최신 Docker 이미지 가져오기
+            echo "⬇️ 최신 애플리케이션 이미지를 가져옵니다..."
             docker pull ${{ steps.login-ecr.outputs.registry }}/seosa-server:latest
-            docker run -d --name seosa-server -p 8080:8080 ${{ steps.login-ecr.outputs.registry }}/seosa-server:latest
+
+            # 애플리케이션 컨테이너 실행 (Redis와 연결)
+            echo "🚀 애플리케이션 컨테이너를 실행합니다..."
+            docker run -d --name seosa-server --link seosa-redis -p 8080:8080 \
+              --env SPRING_REDIS_HOST=seosa-redis \
+              --env SPRING_REDIS_PORT=6379 \
+              ${{ steps.login-ecr.outputs.registry }}/seosa-server:latest
+
+            echo "✅ 배포 완료! 실행 상태 확인을 시작합니다..."
+
+            # Redis 컨테이너 상태 확인
+            echo "🔍 Redis 컨테이너 상태 확인 중..."
+            if docker ps | grep -q seosa-redis; then
+              echo "✅ Redis가 정상적으로 실행 중입니다!"
+            else
+              echo "❌ Redis가 실행되지 않았습니다! 배포 실패!"
+              exit 1
+            fi
+
+            # 애플리케이션 컨테이너 상태 확인
+            echo "🔍 애플리케이션 컨테이너 상태 확인 중..."
+            if docker ps | grep -q seosa-server; then
+              echo "✅ 애플리케이션이 정상적으로 실행 중입니다!"
+            else
+              echo "❌ 애플리케이션이 실행되지 않았습니다! 배포 실패!"
+              exit 1
+            fi
+
+            # Redis PING 테스트
+            echo "🔄 Redis PING 테스트 중..."
+            REDIS_PING=$(docker exec seosa-redis redis-cli ping)
+            if [ "$REDIS_PING" = "PONG" ]; then
+              echo "✅ Redis가 정상 작동 중입니다!"
+            else
+              echo "❌ Redis에 연결할 수 없습니다! 배포 실패!"
+              exit 1
+            fi
+
+            # Nginx 설정 테스트 및 재시작
+            echo "🔄 Nginx 설정 테스트 및 재시작..."
+            sudo nginx -t && sudo systemctl restart nginx
+
+            # 애플리케이션 로그 출력 (최근 20줄)
+            echo "📜 애플리케이션 로그 출력 (최근 20줄)"
+            docker logs --tail 20 seosa-server
