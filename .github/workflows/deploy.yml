@@ -88,7 +88,7 @@ jobs:
             echo "🚀 애플리케이션 컨테이너를 실행합니다..."
             docker run -d --name seosa-server --link seosa-redis -p 8081:8081 \
               -e SPRING_REDIS_HOST=seosa-redis \
-              -e SPRING_REDIS_PORT=6379 \
+              -e SPRING_REDIS_PORT="6379" \
               -e SERVER_PORT=8081 \
               ${{ steps.login-ecr.outputs.registry }}/seosa-server:latest
 
