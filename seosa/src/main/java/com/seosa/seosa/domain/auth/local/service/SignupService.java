@@ -33,6 +33,11 @@ public class SignupService {
             throw new CustomException(ErrorCode.DUPLICATE_EMAIL);
         }
 
+        // 닉네임 중복 체크
+        if (userRepository.existsByNickname(signupRequestDTO.getNickname())) {
+            throw new CustomException(ErrorCode.DUPLICATE_NICKNAME);
+        }
+
         UserRole userRole = userService.determineUserRole(signupRequestDTO.getUserRoleCode());
 
         // 회원 데이터 저장
