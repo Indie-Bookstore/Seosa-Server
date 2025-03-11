@@ -1,4 +1,4 @@
-package com.seosa.seosa.domain.auth.local.dto;
+package com.seosa.seosa.domain.auth.local.dto.request;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -8,7 +8,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class LoginDTO {
+public class LoginRequestDTO {
 
     @NotBlank(message = "이메일은 필수 입력 값입니다.")
     @Email(message = "이메일 형식이 아닙니다.")
