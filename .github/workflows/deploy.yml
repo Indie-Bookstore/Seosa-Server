@@ -87,8 +87,8 @@ jobs:
             # 애플리케이션 컨테이너 실행 (Redis와 연결)
             echo "🚀 애플리케이션 컨테이너를 실행합니다..."
             docker run -d --name seosa-server --link seosa-redis -p 8080:8080 \
-              -env SPRING_REDIS_HOST=seosa-redis \
-              -env SPRING_REDIS_PORT=6379 \
+              --env SPRING_REDIS_HOST=seosa-redis \
+              --env SPRING_REDIS_PORT=6379 \
               ${{ steps.login-ecr.outputs.registry }}/seosa-server:latest
 
             echo "✅ 배포 완료! 실행 상태 확인을 시작합니다..."
