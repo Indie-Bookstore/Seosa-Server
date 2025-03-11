@@ -1,4 +1,4 @@
-package com.seosa.seosa.domain.auth.oauth;
+package com.seosa.seosa.domain.auth.oauth.dto;
 
 import com.seosa.seosa.global.exception.CustomException;
 import com.seosa.seosa.global.exception.ErrorCode;
