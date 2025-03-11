@@ -22,7 +22,7 @@ public class OAuthSignupController {
     private final JWTUtil jwtUtil;
     private final RefreshTokenService refreshTokenService;
 
-    @PatchMapping("/signupAndLogin")
+    @PatchMapping("/signup")
     @Operation(summary = "카카오 회원가입/로그인", description = "카카오 유저가 회원가입/로그인합니다.")
     public ResponseEntity<TokenResponseDTO> completeOAuthSignup(
             @AuthUser User user, @Valid @RequestBody OAuthSignupRequest request) {

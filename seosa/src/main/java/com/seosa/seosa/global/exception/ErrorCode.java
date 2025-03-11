@@ -12,6 +12,11 @@ public enum ErrorCode {
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "회원이 존재하지 않습니다."),
     PASSWORD_MISMATCH(HttpStatus.BAD_REQUEST, "비밀번호가 일치하지 않습니다."),
 
+    // 본인인증 관련 에러
+    USER_EMAIL_MISMATCH(HttpStatus.BAD_REQUEST, "입력한 이메일이 회원 정보와 일치하지 않습니다."),
+    VERIFICATION_CODE_MISMATCH(HttpStatus.BAD_REQUEST, "입력한 인증번호가 이메일로 보낸 인증번호와 일치하지 않습니다."),
+    VERIFICATION_CODE_EXPIRED(HttpStatus.BAD_REQUEST, "인증번호 입력 시간이 만료되었습니다."),
+
     // 회원가입 및 로그인 관련 에러
     INVALID_PASSWORD(HttpStatus.UNAUTHORIZED, "비밀번호가 올바르지 않습니다."),
     DUPLICATE_EMAIL(HttpStatus.CONFLICT, "이미 존재하는 이메일입니다."),
