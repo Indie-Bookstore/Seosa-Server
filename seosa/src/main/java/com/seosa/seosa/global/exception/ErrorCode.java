@@ -40,7 +40,10 @@ public enum ErrorCode {
     BOOKSTORE_NOT_FOUND(HttpStatus.NOT_FOUND , "해당 서점을 찾을 수 없습니다."),
     // 글 관련 에러
     INVALID_ACCESS(HttpStatus.BAD_REQUEST , "접근 권한이 없는 사용자입니다."),
-    POST_NOT_FOUND(HttpStatus.NOT_FOUND , "해당 포스트를 찾을 수 없습니다.");
+    POST_NOT_FOUND(HttpStatus.NOT_FOUND , "해당 포스트를 찾을 수 없습니다."),
+
+    // FAQ 관련 에러
+    FAQ_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 FAQ를 찾을 수 없습니다.");
 
 
 

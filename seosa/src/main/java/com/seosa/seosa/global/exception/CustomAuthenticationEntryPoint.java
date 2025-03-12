@@ -8,10 +8,11 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
- * ✅ 인증되지 않은 사용자가 요청할 경우 401 에러를 반환하는 Custom Authentication Entry Point
+ * ✅ 인증되지 않은 사용자가 접근할 경우 401 에러를 반환하는 Custom Authentication Entry Point
  */
 @Component
 public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint {
@@ -20,18 +21,39 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException)
             throws IOException, ServletException {
 
-        // ✅ `MethodArgumentNotValidException` 발생 여부 확인 후 400 응답 처리
-        if (request.getAttribute("org.springframework.validation.BindingResult") != null) {
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            response.setContentType("application/json; charset=utf-8");
-            response.getWriter().write("{ \"status\": \"BAD_REQUEST\", \"message\": \"요청 데이터가 유효하지 않습니다.\" }");
-            return;
+        response.setContentType("application/json; charset=UTF-8");
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+
+        // 🔹 예외 메시지 기본값 (로그인이 필요한 경우)
+        String errorMessage = "로그인이 필요합니다.";
+
+        // 🔹 JWT 예외 정보가 있는 경우 처리
+        String exceptionType = (String) request.getAttribute("exception");
+        if (exceptionType != null) {
+            switch (exceptionType) {
+                case "ExpiredJwtException":
+                    errorMessage = "토큰이 만료되었습니다. 다시 로그인해주세요.";
+                    break;
+                case "MalformedJwtException":
+                    errorMessage = "잘못된 JWT 토큰입니다.";
+                    break;
+                case "UnsupportedJwtException":
+                    errorMessage = "지원되지 않는 JWT 토큰입니다.";
+                    break;
+                case "InvalidJwtException":
+                    errorMessage = "유효하지 않은 JWT 토큰입니다.";
+                    break;
+            }
         }
 
-        // ✅ 기본적으로 토큰 미제공 시 401 반환
-        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-        response.setContentType("application/json; charset=utf-8");
-        response.getWriter().write("{ \"status\": \"UNAUTHORIZED\", \"code\": \"INVALID_REQUEST\", \"message\": \"요청 형식에 오류가 있습니다.\" }");
-    }
-}
+        // 🔹 JSON 응답 생성
+        Map<String, Object> responseBody = new HashMap<>();
+        responseBody.put("status", 401);
+        responseBody.put("code", "UNAUTHORIZED");
+        responseBody.put("message", errorMessage);
 
+        ObjectMapper objectMapper = new ObjectMapper();
+        response.getWriter().write(objectMapper.writeValueAsString(responseBody));
+    }
+
+}
