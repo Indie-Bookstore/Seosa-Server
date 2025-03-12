@@ -101,7 +101,7 @@ public class PostService {
 
     /* 관리자 권한 확인 */
     private void validateAdminAccess(User user) {
-        if (!user.getUserRole().equals(UserRole.ADMIN)) {
+        if (!(user.getUserRole().equals(UserRole.ADMIN) || user.getUserRole().equals(UserRole.EDITOR))) {
             throw new CustomException(ErrorCode.INVALID_ACCESS);
         }
     }
