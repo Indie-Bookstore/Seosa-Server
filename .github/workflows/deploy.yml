@@ -67,6 +67,10 @@ jobs:
           script: |            
             echo "🔄 배포를 시작합니다..."
 
+            # 불필요한 Docker 이미지 정리
+            echo "🛑 불필요한 Docker 이미지 정리..."
+            docker image prune -f
+
             # Redis 컨테이너 실행 (이미 실행 중이면 유지)
             if docker ps -q --filter "name=seosa-redis" | grep -q .; then
               echo "✅ Redis가 이미 실행 중입니다."
