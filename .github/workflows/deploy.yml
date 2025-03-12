@@ -22,9 +22,11 @@ jobs:
       - name: application.yml 파일 만들기
         run: |
           cd ./seosa/src/main
-          mkdir resources
+          mkdir -p resources
           cd resources
-          echo "${{ secrets.APPLICATION_PROPERTIES }}" > application.yml
+          cat <<EOF > application.yml
+          ${{ secrets.APPLICATION_PROPERTIES }}
+          EOF
 
       - name: 테스트 및 빌드하기
         run: |
@@ -67,6 +69,15 @@ jobs:
           script: |            
             echo "🔄 배포를 시작합니다..."
 
+            # 환경 변수 저장
+            echo "🔍 .env 파일을 생성합니다..."
+            cat <<EOF > /home/ubuntu/seosa.env
+            SPRING_REDIS_HOST=seosa-redis
+            SPRING_REDIS_PORT=6379
+            SPRING_MAIL_USERNAME=${{ secrets.SPRING_MAIL_USERNAME }}
+            SPRING_MAIL_PASSWORD=${{ secrets.SPRING_MAIL_PASSWORD }}
+            EOF
+
             # 불필요한 Docker 이미지 정리
             echo "🛑 불필요한 Docker 이미지 정리..."
             docker image prune -f
@@ -91,8 +102,7 @@ jobs:
             # 애플리케이션 컨테이너 실행 (Redis와 연결)
             echo "🚀 애플리케이션 컨테이너를 실행합니다..."
             docker run -d --name seosa-server --link seosa-redis -p 8080:8080 \
-              --env SPRING_REDIS_HOST=seosa-redis \
-              --env SPRING_REDIS_PORT=6379 \
+              --env-file /home/ubuntu/seosa.env \
               ${{ steps.login-ecr.outputs.registry }}/seosa-server:latest
 
             echo "✅ 배포 완료! 실행 상태 확인을 시작합니다..."
@@ -129,6 +139,8 @@ jobs:
             echo "🔄 Nginx 설정 테스트 및 재시작..."
             sudo nginx -t && sudo systemctl restart nginx
 
-            # 애플리케이션 로그 출력 (최근 20줄)
-            echo "📜 애플리케이션 로그 출력 (최근 20줄)"
-            docker logs --tail 20 seosa-server
+
+      - name: 애플리케이션 상태 확인
+        run: |
+          docker ps -a
+          docker logs --tail 50 seosa-server
