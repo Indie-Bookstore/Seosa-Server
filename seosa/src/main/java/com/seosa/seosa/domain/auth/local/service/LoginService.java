@@ -1,7 +1,7 @@
 package com.seosa.seosa.domain.auth.local.service;
 
-import com.seosa.seosa.domain.auth.local.dto.LoginDTO;
-import com.seosa.seosa.domain.auth.local.dto.LoginResponseDTO;
+import com.seosa.seosa.domain.auth.local.dto.request.LoginRequestDTO;
+import com.seosa.seosa.domain.auth.local.dto.response.LoginResponseDTO;
 import com.seosa.seosa.domain.jwt.JWTUtil;
 import com.seosa.seosa.domain.token.service.RefreshTokenService;
 import com.seosa.seosa.domain.user.dto.CustomUserDetails;
@@ -24,7 +24,7 @@ public class LoginService {
     private final RefreshTokenService refreshTokenService;
     private final UserRepository userRepository;
 
-    public LoginResponseDTO login(LoginDTO request) {
+    public LoginResponseDTO login(LoginRequestDTO request) {
 
         // DB에서 이메일 존재 여부 확인
         if(!userRepository.existsByEmail(request.getEmail())) {

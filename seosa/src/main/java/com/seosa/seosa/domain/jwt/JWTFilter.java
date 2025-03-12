@@ -18,6 +18,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Arrays;
+
+import com.seosa.seosa.global.config.SecurityConfig;
 
 public class JWTFilter extends OncePerRequestFilter {
 
@@ -29,13 +32,10 @@ public class JWTFilter extends OncePerRequestFilter {
         this.userRepository = userRepository;
     }
 
-    // JWT 필터에서 제외할 경로 목록
+    // SecurityConfig.AUTH_WHITELIST를 활용하여 JWT 필터 제외 경로 동기화
     private boolean isExcludedFromJwtFilter(String requestURI) {
-        return requestURI.startsWith("/local") ||  // 로컬 로그인 & 회원가입
-                requestURI.startsWith("/oauth2") ||  // OAuth 로그인 & 회원가입
-                requestURI.startsWith("/reissue") ||  // 토큰 재발급
-                requestURI.startsWith("/swagger-ui") ||  // Swagger
-                requestURI.startsWith("/v3/api-docs"); // API Docs
+        return Arrays.stream(SecurityConfig.AUTH_WHITELIST)
+                .anyMatch(requestURI::startsWith);
     }
 
     @Override

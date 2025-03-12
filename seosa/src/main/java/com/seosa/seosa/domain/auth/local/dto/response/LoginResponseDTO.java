@@ -1,4 +1,4 @@
-package com.seosa.seosa.domain.auth.local.dto;
+package com.seosa.seosa.domain.auth.local.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
