@@ -22,6 +22,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 
+import java.util.Arrays;
 import java.util.Collections;
 
 @Configuration
@@ -70,12 +71,18 @@ public class SecurityConfig {
                 // ✅ CORS 설정
                 .cors(cors -> cors.configurationSource(request -> {
                     CorsConfiguration configuration = new CorsConfiguration();
-                    configuration.setAllowedOrigins(Collections.singletonList("https://seosa.o-r.kr"));
-                    configuration.setAllowedOrigins(Collections.singletonList("http://localhost:3000"));
-                    configuration.setAllowedMethods(Collections.singletonList("*"));
+
+                    // 🚀 여러 개의 도메인 허용
+                    configuration.setAllowedOrigins(Arrays.asList(
+                            "https://seosa.o-r.kr", // ✅ 배포된 Swagger UI
+                            "http://localhost:3000" // ✅ 로컬 프론트엔드
+                    ));
+
+                    configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
                     configuration.setAllowCredentials(true);
                     configuration.setAllowedHeaders(Collections.singletonList("*"));
                     configuration.setExposedHeaders(Collections.singletonList("Authorization"));
+
                     return configuration;
                 }))
 
