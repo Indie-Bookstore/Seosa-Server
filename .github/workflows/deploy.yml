@@ -142,5 +142,6 @@ jobs:
 
       - name: 애플리케이션 상태 확인
         run: |
+          sleep 10 # 이미지 실행될때까지 대기시간 추가
           docker ps -a
           docker logs --tail 50 seosa-server
