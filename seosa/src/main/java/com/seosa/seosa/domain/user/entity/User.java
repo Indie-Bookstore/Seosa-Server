@@ -1,5 +1,6 @@
 package com.seosa.seosa.domain.user.entity;
 
+import com.seosa.seosa.domain.comment.entity.Comment;
 import com.seosa.seosa.domain.faq.entity.FAQ;
 import com.seosa.seosa.domain.post.entity.Post;
 import com.seosa.seosa.global.entity.BaseTimeEntity;
@@ -42,6 +43,9 @@ public class User extends BaseTimeEntity {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Post> posts = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Comment> comments = new ArrayList<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<FAQ> faqs = new ArrayList<>();
