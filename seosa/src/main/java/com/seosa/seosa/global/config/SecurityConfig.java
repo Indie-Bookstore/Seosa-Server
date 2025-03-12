@@ -78,7 +78,7 @@ public class SecurityConfig {
                             "http://localhost:3000" // ✅ 로컬 프론트엔드
                     ));
 
-                    configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+                    configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
                     configuration.setAllowCredentials(true);
                     configuration.setAllowedHeaders(Collections.singletonList("*"));
                     configuration.setExposedHeaders(Collections.singletonList("Authorization"));
