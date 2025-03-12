@@ -70,6 +70,7 @@ public class SecurityConfig {
                 // ✅ CORS 설정
                 .cors(cors -> cors.configurationSource(request -> {
                     CorsConfiguration configuration = new CorsConfiguration();
+                    configuration.setAllowedOrigins(Collections.singletonList("https://seosa.o-r.kr"));
                     configuration.setAllowedOrigins(Collections.singletonList("http://localhost:3000"));
                     configuration.setAllowedMethods(Collections.singletonList("*"));
                     configuration.setAllowCredentials(true);
