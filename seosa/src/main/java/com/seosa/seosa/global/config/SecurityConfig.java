@@ -6,10 +6,12 @@ import com.seosa.seosa.domain.jwt.JWTFilter;
 import com.seosa.seosa.domain.jwt.JWTUtil;
 import com.seosa.seosa.domain.token.repository.RefreshTokenRepository;
 import com.seosa.seosa.domain.user.repository.UserRepository;
+import com.seosa.seosa.global.exception.CustomAccessDeniedHandler;
 import com.seosa.seosa.global.exception.CustomAuthenticationEntryPoint;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -35,13 +37,18 @@ public class SecurityConfig {
     private final CustomSuccessHandler customSuccessHandler;
 
     // 인증이 필요없는 URL 패턴 목록을 정의
-    private static final String[] AUTH_WHITELIST = {
-            "/user/profile",
-            "/local/**",
+    public static final String[] AUTH_WHITELIST = {
+            "/user/checkEmail",
+            "/user/checkNickname",
+
+            "/local/login",
+            "/local/signup",
+
             "/reissue",
+
             "/oauth2/**",
             "/login/oauth2/code/*",
-            "/redis/**",
+
             "/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs", "/v3/api-docs/**"
     };
 
@@ -102,15 +109,22 @@ public class SecurityConfig {
 
                 // ✅ 자동 Redirect 제거: 인증되지 않은 사용자는 401 반환
                 .exceptionHandling(exception -> exception
-                        .authenticationEntryPoint(new CustomAuthenticationEntryPoint()) // ✅ EntryPoint 추가
+                        .authenticationEntryPoint(new CustomAuthenticationEntryPoint()) // 401 UNAUTHORIZED 핸들러
+                        .accessDeniedHandler(new CustomAccessDeniedHandler())  // ✅ 403 FORBIDDEN 핸들러 추가
+
                 )
 
                 // ✅ 경로별 인가 작업
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(AUTH_WHITELIST).permitAll()
-                        .requestMatchers("/local/login").permitAll()
-                        // ADMIN, EDITOR: POST API 접근 가능 / ADMIN: FAQ API 접근 가능
-                        //.requestMatchers("/admin").hasRole("ADMIN")
+                        // ADMIN, EDITOR: POST API 접근 가능
+                        // 코드 작성 필요
+
+                        // ADMIN: FAQ 생성, 수정, 삭제 API 접근 가능
+                        .requestMatchers(HttpMethod.POST, "/faq").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/faq/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/faq/**").hasRole("ADMIN")
+
                         .anyRequest().authenticated()
                 )
 

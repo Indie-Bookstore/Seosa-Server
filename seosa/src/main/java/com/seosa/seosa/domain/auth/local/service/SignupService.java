@@ -1,6 +1,8 @@
 package com.seosa.seosa.domain.auth.local.service;
 
-import com.seosa.seosa.domain.auth.local.dto.SignupDTO;
+import com.seosa.seosa.domain.auth.local.dto.request.SignupRequestDTO;
+import com.seosa.seosa.domain.auth.local.dto.response.LoginResponseDTO;
+import com.seosa.seosa.domain.auth.local.dto.response.SignupResponseDTO;
 import com.seosa.seosa.domain.user.entity.AuthProvider;
 import com.seosa.seosa.domain.user.entity.User;
 import com.seosa.seosa.domain.user.entity.UserRole;
@@ -22,26 +24,35 @@ public class SignupService {
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
     private final UserService userService;
 
-    public void signupProcess(SignupDTO signupDTO) {
+    public SignupResponseDTO signupProcess(SignupRequestDTO signupRequestDTO) {
+
+        String email = signupRequestDTO.getEmail();
 
         // 이메일 중복 체크
-        if (userRepository.existsByEmail(signupDTO.getEmail())) {
+        if (userRepository.existsByEmail(email)) {
             throw new CustomException(ErrorCode.DUPLICATE_EMAIL);
         }
 
-        UserRole userRole = userService.determineUserRole(signupDTO.getUserRoleCode());
+        // 닉네임 중복 체크
+        if (userRepository.existsByNickname(signupRequestDTO.getNickname())) {
+            throw new CustomException(ErrorCode.DUPLICATE_NICKNAME);
+        }
+
+        UserRole userRole = userService.determineUserRole(signupRequestDTO.getUserRoleCode());
 
         // 회원 데이터 저장
         User user = User.builder()
-                .email(signupDTO.getEmail())
-                .nickname(signupDTO.getNickname())
-                .password(bCryptPasswordEncoder.encode(signupDTO.getPassword()))
+                .email(email)
+                .nickname(signupRequestDTO.getNickname())
+                .password(bCryptPasswordEncoder.encode(signupRequestDTO.getPassword()))
                 .userRole(userRole)
-                .profileImage(signupDTO.getProfileImage())
+                .profileImage(signupRequestDTO.getProfileImage())
                 .provider(AuthProvider.LOCAL)
                 .providerId(null)
                 .build();
 
         userRepository.save(user);
+
+        return new SignupResponseDTO("Local Signup successful", email);
     }
 }

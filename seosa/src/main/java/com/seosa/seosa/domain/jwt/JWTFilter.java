@@ -18,6 +18,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Arrays;
+
+import com.seosa.seosa.global.config.SecurityConfig;
 
 public class JWTFilter extends OncePerRequestFilter {
 
@@ -29,13 +32,10 @@ public class JWTFilter extends OncePerRequestFilter {
         this.userRepository = userRepository;
     }
 
-    // JWT 필터에서 제외할 경로 목록
+    // SecurityConfig.AUTH_WHITELIST를 활용하여 JWT 필터 제외 경로 동기화
     private boolean isExcludedFromJwtFilter(String requestURI) {
-        return requestURI.startsWith("/local") ||  // 로컬 로그인 & 회원가입
-                requestURI.startsWith("/oauth2") ||  // OAuth 로그인 & 회원가입
-                requestURI.startsWith("/reissue") ||  // 토큰 재발급
-                requestURI.startsWith("/swagger-ui") ||  // Swagger
-                requestURI.startsWith("/v3/api-docs"); // API Docs
+        return Arrays.stream(SecurityConfig.AUTH_WHITELIST)
+                .anyMatch(requestURI::startsWith);
     }
 
     @Override
@@ -74,13 +74,17 @@ public class JWTFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
 
         } catch (ExpiredJwtException e) {
-            throw new CustomException(ErrorCode.EXPIRED_TOKEN);
+            request.setAttribute("exception", "ExpiredJwtException"); // ✅ 예외 정보를 request에 저장
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "토큰이 만료되었습니다.");
         } catch (MalformedJwtException e) {
-            throw new CustomException(ErrorCode.MALFORMED_TOKEN);
+            request.setAttribute("exception", "MalformedJwtException");
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "잘못된 JWT 토큰입니다.");
         } catch (UnsupportedJwtException e) {
-            throw new CustomException(ErrorCode.UNSUPPORTED_TOKEN);
+            request.setAttribute("exception", "UnsupportedJwtException");
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "지원되지 않는 JWT 토큰입니다.");
         } catch (Exception e) {
-            throw new CustomException(ErrorCode.INVALID_TOKEN);
+            request.setAttribute("exception", "InvalidJwtException");
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "유효하지 않은 JWT 토큰입니다.");
         }
     }
 }
