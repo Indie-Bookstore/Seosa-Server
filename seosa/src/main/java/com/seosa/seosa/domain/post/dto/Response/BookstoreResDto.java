@@ -11,8 +11,8 @@ public record BookstoreResDto(
 
         @Schema(description = "우편번호")
        String postalCode,
-                @Schema(description = "주소(구까지)")
-         String address,
+        @Schema(description = "주소(구까지)")
+        String address,
         @Schema(description = "상세주소")
         String detailedAddress,
         @Schema(description = "운영 요일" , example = "월,화,수")
@@ -20,9 +20,9 @@ public record BookstoreResDto(
         @Schema(description = "운영 시간" , example = "9:00~18:00")
         String openHours,
         @Schema(description = "전화번호")
-       String phoneNumber,
+        String phoneNumber,
         @Schema(description = "인스타그램 주소")
-       String instagramLink
+        String instagramLink
 
 ) {
 

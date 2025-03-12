@@ -19,15 +19,21 @@ public class Comment extends BaseTimeEntity {
     private Long commentId;
 
     @Column(length = 1024)
-    private String comment;
+    private String text;
 
     @ManyToOne
     @JoinColumn(name = "post_id")
     private Post post;
 
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User user;
+
     @Builder
-    public Comment(String comment){
-        this.comment = comment;
+    public Comment(String text, Post post ,User user){
+        this.text = text;
+        this.post = post;
+        this.user = user;
     }
 
 }
