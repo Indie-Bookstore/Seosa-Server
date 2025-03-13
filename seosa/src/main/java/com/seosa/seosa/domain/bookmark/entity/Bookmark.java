@@ -5,6 +5,7 @@ import com.seosa.seosa.domain.user.entity.User;
 import com.seosa.seosa.global.entity.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -24,6 +25,13 @@ public class Bookmark extends BaseTimeEntity {
     @ManyToOne
     @JoinColumn(name = "post_id")
     private Post post;
+
+    @Builder
+    public Bookmark(Post post ,User user){
+        this.post = post;
+        this.user = user;
+    }
+
 
 
 
