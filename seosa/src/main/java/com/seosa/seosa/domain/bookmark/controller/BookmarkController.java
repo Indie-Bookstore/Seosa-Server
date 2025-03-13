@@ -1,0 +1,49 @@
+package com.seosa.seosa.domain.bookmark.controller;
+
+import com.seosa.seosa.domain.bookmark.dto.Response.BookmarkResDto;
+import com.seosa.seosa.domain.bookmark.service.BookmarkService;
+import com.seosa.seosa.domain.user.entity.User;
+import com.seosa.seosa.global.annotation.AuthUser;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping
+@RequiredArgsConstructor
+@Tag(name = "Comment API", description = "댓글 관련 API")
+public class BookmarkController {
+
+    private final BookmarkService bookmarkService;
+
+    /* 북마크 하기 */
+    @PostMapping("/{postId}/bookmark")
+    @Operation(summary = "게시글에 북마크", description = "사용자가 특정 게시글을 북마크합니다.")
+    public ResponseEntity<BookmarkResDto> doBookmark(@AuthUser User user , @PathVariable("postId") Long postId){
+       BookmarkResDto bookmark = bookmarkService.doBookmark(user , postId);
+       return ResponseEntity.status(HttpStatus.CREATED)
+               .body(bookmark);
+    }
+
+    /* 사용자가 자신의 북마크 목록을 조회 */
+    @GetMapping("/bookmark")
+    @Operation(summary = "자신의 북마크 목록 조회", description = "사용자가 자신의 북마크 목록을 조회합니다.")
+    public ResponseEntity<List<BookmarkResDto>> doBookmark(@AuthUser User user){
+        List<BookmarkResDto> bookmarkResDtos = bookmarkService.getBookmarks(user);
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(bookmarkResDtos);
+    }
+
+    /* 북마크 삭제 */
+    @DeleteMapping("/bookmark/{bookmarkId}")
+    @Operation(summary = "특정 북마크 취소", description = "사용자가 자신의 북마크를 취소합니다.")
+    public ResponseEntity<String> deleteBookmark(@AuthUser User user , @PathVariable("bookmarkId")Long bookmarkId){
+        String response = bookmarkService.deleteBookmark(user , bookmarkId);
+        return ResponseEntity.ok(response);
+    }
+}
