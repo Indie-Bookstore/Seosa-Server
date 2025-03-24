@@ -1,11 +1,6 @@
 package com.seosa.seosa.domain.bookmark.repository;
 
-import com.querydsl.core.types.ConstantImpl;
-import com.querydsl.core.types.Projections;
-import com.querydsl.core.types.dsl.BooleanExpression;
-import com.querydsl.core.types.dsl.Expressions;
-import com.querydsl.core.types.dsl.StringExpressions;
-import com.querydsl.core.types.dsl.StringTemplate;
+import com.querydsl.core.types.dsl.*;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.seosa.seosa.domain.bookmark.dto.Response.BookmarkResDto;
 import com.seosa.seosa.domain.bookmark.entity.Bookmark;
@@ -19,6 +14,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -30,29 +26,28 @@ public class BookmarkRepositoryImpl implements BookmarkRepositoryCustom {
     @Override
     public Page<BookmarkResDto> findMyBookmarksWithCursor(Long userId, String customCursor, Pageable pageable) {
         QBookmark bookmark = QBookmark.bookmark;
+        QUser user = QUser.user;
+        QPost post = QPost.post;
 
-        log.info(">> 북마크 커서 기반 조회 실행");
-        log.info("쿼리 실행 직전 - 커서: {}", customCursor);
-        // limit + 1 개 조회 ( 다음 페이지가 있는 지 확인하기 위해서)
+
         List<Bookmark> results = jpaQueryFactory
-                .selectFrom(bookmark)
+                .select(bookmark)
+                .from(bookmark)
+                .innerJoin(bookmark.user, user).fetchJoin()
+                .innerJoin(bookmark.post, post).fetchJoin()
                 .where(
-                        bookmark.user.userId.eq(userId),
+                        user.userId.eq(userId),
                         customCursorCondition(customCursor)
                 )
                 .orderBy(bookmark.createdAt.desc(), bookmark.bookmarkId.desc())
-                .limit(pageable.getPageSize() + 1) // 다음 커서 존재 여부 확인용
+                .limit(pageable.getPageSize()+1)
                 .fetch();
-        log.info("쿼리 실행 완료 - 결과 개수: {}", results.size());
-
-        log.info(">> 북마크 커서 기반 조회 실행 2");
 
         // 다음 커서 계산
         boolean hasNext = results.size() > pageable.getPageSize();
         if (hasNext) {
             results.remove(pageable.getPageSize()); // 9번 인덱스 지우기
         }
-
         // DTO
         List<BookmarkResDto> content = results.stream()
                 .map(b -> BookmarkResDto.to(b))
@@ -64,20 +59,22 @@ public class BookmarkRepositoryImpl implements BookmarkRepositoryCustom {
 
 
     private BooleanExpression customCursorCondition(String customCursor) {
+
         if (customCursor == null) {
             return null;
         }
 
         QBookmark bookmark = QBookmark.bookmark;
 
-        StringTemplate dateFormatted = Expressions.stringTemplate(
-                "DATE_FORMAT({0}, {1})",
-                bookmark.createdAt,
-                ConstantImpl.create("%Y%m%d%H%i%s")
-        );
+        String datePart = customCursor.substring(0, 14);
+        String idPart = customCursor.substring(14);
 
-        return StringExpressions.lpad(dateFormatted, 20, '0')
-                .concat(StringExpressions.lpad(bookmark.bookmarkId.stringValue(), 10, '0'))
-                .gt(customCursor); // 커서 이후의 데이터만 조회
+        LocalDateTime createdAtCursor = LocalDateTime.parse(datePart, DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
+        Long bookmarkIdCursor = Long.parseLong(idPart);
+
+        return bookmark.createdAt.lt(createdAtCursor) // createdAt보다 작거나 같고
+                .or(bookmark.createdAt.eq(createdAtCursor)
+                        .and(bookmark.bookmarkId.lt(bookmarkIdCursor))); // 북마크 id보다 작아야 함
     }
+
 }

@@ -16,7 +16,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+
 
 @RestController
 @RequestMapping
@@ -58,8 +58,6 @@ public class BookmarkController {
     @Operation(summary = "내 북마크 목록 조회", description = "커서 기반으로 북마크를 9개씩 조회합니다.")
     public ResponseEntity<BookmarkCursorDto> getMyBookmarks(@AuthUser User user, @Parameter(description = "마지막 북마크 ID (다음 페이지 요청 시)")
             @RequestParam(required = false , name ="cursor") Integer cursorId, @PageableDefault(size = 9) Pageable pageable) {
-        log.info("지금 cursor Id : {}" , cursorId);
-        log.info("커서 북마크의 유저 ID: {}", user.getUserId());
         BookmarkCursorDto response = bookmarkService.getMyBookmarks(user.getUserId(), cursorId, pageable);
         return ResponseEntity.ok(response);
     }

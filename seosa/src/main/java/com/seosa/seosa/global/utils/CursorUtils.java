@@ -1,24 +1,22 @@
 package com.seosa.seosa.global.utils;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 public class CursorUtils {
 
-    private static final int DATE_LENGTH = 20;
+    private static final int DATE_LENGTH = 14;  // yyyyMMddHHmmss
     private static final int ID_LENGTH = 10;
 
-    // 커서 문자열
+    // 커서 문자열 생성
     public static String generateCustomCursor(LocalDateTime createdAt, Long id) {
         if (createdAt == null || id == null) return null;
 
-        String dateStr = createdAt.toString()
-                .replaceAll("T", "")
-                .replaceAll("-", "")
-                .replaceAll(":", "") + "00";
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+        String dateStr = createdAt.format(formatter);
 
-        String paddedDate = String.format("%1$" + DATE_LENGTH + "s", dateStr).replace(' ', '0');
-        String paddedId = String.format("%1$" + ID_LENGTH + "s", id).replace(' ', '0');
+        String paddedId = String.format("%010d", id);
 
-        return paddedDate + paddedId;
+        return dateStr + paddedId;
     }
 }

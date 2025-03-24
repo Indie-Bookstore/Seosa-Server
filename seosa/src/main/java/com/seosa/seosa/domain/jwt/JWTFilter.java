@@ -12,6 +12,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -22,6 +23,7 @@ import java.util.Arrays;
 
 import com.seosa.seosa.global.config.SecurityConfig;
 
+@Slf4j
 public class JWTFilter extends OncePerRequestFilter {
 
     private final JWTUtil jwtUtil;
@@ -59,6 +61,11 @@ public class JWTFilter extends OncePerRequestFilter {
 
         String accessToken = header.replace("Bearer ", "");
 
+        log.info(">>> 요청 URI: {}", request.getRequestURI());
+        log.info(">>> 요청 쿼리 파라미터: {}", request.getQueryString());
+        log.info("Authorization 헤더: {}", header);
+        log.info("accessToken: {}", accessToken);
+
         // 토큰 만료 여부 확인
         try {
             jwtUtil.isExpired(accessToken);
@@ -83,6 +90,7 @@ public class JWTFilter extends OncePerRequestFilter {
             request.setAttribute("exception", "UnsupportedJwtException");
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "지원되지 않는 JWT 토큰입니다.");
         } catch (Exception e) {
+            log.error("도대체 뭔 에러야.... 미취겠네", e);
             request.setAttribute("exception", "InvalidJwtException");
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "유효하지 않은 JWT 토큰입니다.");
         }

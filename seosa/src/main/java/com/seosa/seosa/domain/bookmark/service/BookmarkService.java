@@ -76,29 +76,26 @@ public class BookmarkService {
 
 
     public BookmarkCursorDto getMyBookmarks(Long userId, Integer cursorId, Pageable pageable) {
-        log.info("service , 지금 cursor Id : {}" , cursorId);
-        log.info("service ,커서 북마크의 유저 ID: {}", userId);
+
         // 커서 문자열 생성 (cursorId가 null일 경우 첫 페이지)
         String customCursor = null;
         if (cursorId != null) {
             Bookmark bookmark = bookmarkRepository.findById(cursorId.longValue())
                     .orElseThrow(() -> new CustomException(ErrorCode.BOOKMARK_NOT_FOUND));
-            log.info("여기까지 오나 1");
+
             customCursor = CursorUtils.generateCustomCursor(bookmark.getCreatedAt(), bookmark.getBookmarkId());
-            log.info("여기까지 오나 2");
+
         }
 
-        log.info("service customCursor 값 : {}" , customCursor);
         // 페이징된 북마크 조회
         Page<BookmarkResDto> page = bookmarkRepository.findMyBookmarksWithCursor(userId, customCursor, pageable);
 
-        log.info("여기까지 오나3");
 
         List<BookmarkResDto> content = page.getContent();
         boolean hasNext = page.hasNext() ? true : false;
         int nextCursorId = content.isEmpty() ? 0 : content.get(content.size() - 1).bookmarkId().intValue();
 
-        log.info("nextCursor id 값 : {}" , nextCursorId);
+
 
         return new BookmarkCursorDto(content, nextCursorId, hasNext);
     }
