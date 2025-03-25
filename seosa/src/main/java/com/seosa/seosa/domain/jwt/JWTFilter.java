@@ -61,10 +61,7 @@ public class JWTFilter extends OncePerRequestFilter {
 
         String accessToken = header.replace("Bearer ", "");
 
-        log.info(">>> 요청 URI: {}", request.getRequestURI());
-        log.info(">>> 요청 쿼리 파라미터: {}", request.getQueryString());
-        log.info("Authorization 헤더: {}", header);
-        log.info("accessToken: {}", accessToken);
+
 
         // 토큰 만료 여부 확인
         try {
@@ -90,7 +87,6 @@ public class JWTFilter extends OncePerRequestFilter {
             request.setAttribute("exception", "UnsupportedJwtException");
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "지원되지 않는 JWT 토큰입니다.");
         } catch (Exception e) {
-            log.error("도대체 뭔 에러야.... 미취겠네", e);
             request.setAttribute("exception", "InvalidJwtException");
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "유효하지 않은 JWT 토큰입니다.");
         }
