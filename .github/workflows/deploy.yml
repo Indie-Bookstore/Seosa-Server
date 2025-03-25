@@ -76,6 +76,7 @@ jobs:
             SPRING_REDIS_PORT=6379
             SPRING_MAIL_USERNAME=${{ secrets.SPRING_MAIL_USERNAME }}
             SPRING_MAIL_PASSWORD=${{ secrets.SPRING_MAIL_PASSWORD }}
+            JAVA_OPTS=-Xmx256m -Xms128m
             EOF
 
             echo "🔝 빌트중 아직 사용안하는 Docker 이미지 제거"
