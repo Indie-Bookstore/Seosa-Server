@@ -78,34 +78,32 @@ jobs:
             SPRING_MAIL_PASSWORD=${{ secrets.SPRING_MAIL_PASSWORD }}
             EOF
 
-            # 불필요한 Docker 이미지 정리
-            echo "🛑 불필요한 Docker 이미지 정리..."
+            echo "🔝 빌트중 아직 사용안하는 Docker 이미지 제거"
             docker image prune -f
 
-            # Redis 컨테이너 실행 (이미 실행 중이면 유지)
             if docker ps -q --filter "name=seosa-redis" | grep -q .; then
               echo "✅ Redis가 이미 실행 중입니다."
             else
               echo "🚀 Redis 컨테이너를 실행합니다..."
-              docker run -d --name seosa-redis -p 6379:6379 redis:latest
+              docker run -d --name seosa-redis -p 6379:6379 \
+                --memory=256m redis:latest
             fi
 
-            # 기존 애플리케이션 컨테이너 중지 및 삭제
-            echo "🛑 기존 애플리케이션을 중지하고 삭제합니다..."
+            echo "🔝 기존 케이드 중지/삭제"
             docker stop seosa-server || true
             docker rm seosa-server || true
 
-            # 최신 Docker 이미지 가져오기
-            echo "⬇️ 최신 애플리케이션 이미지를 가져옵니다..."
+            echo "⬇️ 최신 이미지 가져오기"
             docker pull ${{ steps.login-ecr.outputs.registry }}/seosa-server:latest
 
-            # 애플리케이션 컨테이너 실행 (Redis와 연결)
-            echo "🚀 애플리케이션 컨테이너를 실행합니다..."
+            echo "🚀 애플리케이션 컨테이너 실행"
             docker run -d --name seosa-server --link seosa-redis -p 8080:8080 \
+              --restart always \
+              -m 512m --memory-swap 1g \
               --env-file /home/ubuntu/seosa.env \
               ${{ steps.login-ecr.outputs.registry }}/seosa-server:latest
 
-            echo "✅ 배포 완료! 실행 상태 확인을 시작합니다..."
+            echo "✅ 배포 완료! 상태 확인 시작..."
 
             # Redis 컨테이너 상태 확인
             echo "🔍 Redis 컨테이너 상태 확인 중..."
