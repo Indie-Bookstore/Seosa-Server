@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -46,16 +47,25 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
             refreshTokenService.saveRefreshToken(userId, refreshToken);
 
-            String message = Objects.equals(role, "TEMP_USER") ?
-                    "회원가입을 완료해주세요" : "OAuth2 login successful";
+            String uri;
+            // 임시 유저라면 추가 정보기입 페이지로 리다이렉트
+            if (Objects.equals(role, "TEMP_USER")) {
+                uri = "http://10.240.11.153:8081/Auth";
+            }
 
-            // TokenResponseDTO 사용하여 응답 객체 생성
-            TokenResponseDTO tokenResponseDTO = new TokenResponseDTO(message, accessToken, refreshToken);
+            // 일반 유저라면 메인 페이지로 리다이렉트
+            else {
+                uri = "http://10.240.11.153:8081/Main";
+            }
 
-            // JSON 응답 반환
-            response.setContentType("application/json");
-            response.setCharacterEncoding("UTF-8");
-            response.getWriter().write(objectMapper.writeValueAsString(tokenResponseDTO));
+            System.out.println(uri);
+
+            String targetUrl = UriComponentsBuilder.fromUriString(uri)
+                    .queryParam("accessToken", accessToken)
+                    .queryParam("refreshToken", refreshToken)
+                    .build().toUriString();
+
+            getRedirectStrategy().sendRedirect(request, response, targetUrl);
 
         } catch (Exception e) {
             throw new CustomException(ErrorCode.OAUTH2_AUTHENTICATION_FAILED, "OAuth2 authentication success handling failed");

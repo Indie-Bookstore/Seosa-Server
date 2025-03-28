@@ -50,6 +50,8 @@ public class SecurityConfig {
             "/oauth2/**",
             "/login/oauth2/code/*",
 
+            "/test/**",
+
             "/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs", "/v3/api-docs/**"
     };
 
@@ -97,9 +99,12 @@ public class SecurityConfig {
 
                 // ✅ OAuth2 로그인 설정 (카카오 로그인 경로만 허용)
                 .oauth2Login(oauth2 -> oauth2
+                        // OAuth2 로그인이 완료되어, 소셜로부터 받아온 사용자 정보 처리
                         .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
+                        // OAuth2 로그인이 성공시 실행
                         .successHandler(customSuccessHandler)
-                        .loginPage("/oauth2/authorization/kakao") // ✅ OAuth2 로그인 경로 지정
+                        // OAuth2 로그인 경로
+                        .loginPage("/oauth2/authorization/kakao")
                 )
 
                 // ✅ 기본 LogoutFilter 제거
