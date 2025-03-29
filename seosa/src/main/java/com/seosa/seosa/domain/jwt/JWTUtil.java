@@ -28,7 +28,7 @@ public class JWTUtil {
 
     @PostConstruct
     public void init() {
-        System.out.println("🔍 JWT Secret Key: " + secret);
+        System.out.println(" JWT Secret Key: " + secret);
         this.secretKey = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8),
                 Jwts.SIG.HS256.key().build().getAlgorithm());
     }
