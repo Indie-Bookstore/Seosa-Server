@@ -1,6 +1,5 @@
 package com.seosa.seosa.domain.post.service;
 
-
 import com.seosa.seosa.domain.bookstore.entity.Bookstore;
 import com.seosa.seosa.domain.bookstore.repository.BookstoreRepository;
 import com.seosa.seosa.domain.content.entity.Content;
@@ -9,10 +8,7 @@ import com.seosa.seosa.domain.post.dto.Request.BookstoreReqDto;
 import com.seosa.seosa.domain.post.dto.Request.ContentReqDto;
 import com.seosa.seosa.domain.post.dto.Request.PostReqDto;
 import com.seosa.seosa.domain.post.dto.Request.ProductReqDto;
-import com.seosa.seosa.domain.post.dto.Response.BookstoreResDto;
-import com.seosa.seosa.domain.post.dto.Response.ContentResDto;
-import com.seosa.seosa.domain.post.dto.Response.PostResDto;
-import com.seosa.seosa.domain.post.dto.Response.ProductResDto;
+import com.seosa.seosa.domain.post.dto.Response.*;
 import com.seosa.seosa.domain.post.entity.Post;
 import com.seosa.seosa.domain.post.repository.PostRepository;
 import com.seosa.seosa.domain.product.entity.Product;
@@ -21,7 +17,10 @@ import com.seosa.seosa.domain.user.entity.User;
 import com.seosa.seosa.domain.user.entity.UserRole;
 import com.seosa.seosa.global.exception.CustomException;
 import com.seosa.seosa.global.exception.ErrorCode;
+import com.seosa.seosa.global.utils.CursorUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -132,5 +131,58 @@ public class PostService {
                 .map(productReqDto -> ProductReqDto.toEntity(productReqDto, bookstore))
                 .collect(Collectors.toList());
         return productRepository.saveAll(productList);
+    }
+
+    /* 메인 페이지에서 게시물 5개씩 조회 */
+    public PostCursorDto getMainPosts( Integer cursorId, Pageable pageable) {
+
+        // 커서 문자열 생성 (cursorId가 null일 경우 첫 페이지)
+        String customCursor = null;
+        if (cursorId != null) {
+            Post post = postRepository.findById(cursorId.longValue())
+                    .orElseThrow(() -> new CustomException(ErrorCode.POST_NOT_FOUND));
+
+            customCursor = CursorUtils.generateCustomCursor(post.getCreatedAt(), post.getPostId());
+
+        }
+
+        // 페이징된 게시물 조회
+        Page<PostSimpleResDto> page = postRepository.findMainPostsWithCursor(customCursor, pageable);
+
+
+        List<PostSimpleResDto> content = page.getContent();
+        boolean hasNext = page.hasNext() ? true : false;
+        int nextCursorId = content.isEmpty() ? 0 : content.get(content.size() - 1).postId().intValue();
+
+
+
+        return new PostCursorDto(content, nextCursorId, hasNext);
+    }
+
+    /* 마이페이지에서 내가 쓴 글 조회 : 5개씩*/
+    public PostCursorDto getMyPosts(Long userId, Integer cursorId, Pageable pageable) {
+
+        // 커서 문자열 생성 (cursorId가 null일 경우 첫 페이지)
+        String customCursor = null;
+        if (cursorId != null) {
+            Post post = postRepository.findById(cursorId.longValue())
+                    .orElseThrow(() -> new CustomException(ErrorCode.POST_NOT_FOUND));
+
+            customCursor = CursorUtils.generateCustomCursor(post.getCreatedAt(), post.getPostId());
+
+        }
+
+        // 페이징된 게시물 조회
+        Page<PostSimpleResDto> page = postRepository.findMyPostsWithCursor(userId ,customCursor, pageable);
+
+
+        List<PostSimpleResDto> content = page.getContent();
+        boolean hasNext = page.hasNext() ? true : false;
+        int nextCursorId = content.isEmpty() ? 0 : content.get(content.size() - 1).postId().intValue();
+
+
+
+        return new PostCursorDto(content, nextCursorId, hasNext);
+
     }
 }

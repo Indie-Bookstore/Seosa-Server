@@ -16,8 +16,10 @@ public record PostResDto(
 
         @Schema(description = "글 제목")
        String title,
-                @Schema(description = "위치")
+        @Schema(description = "위치")
         String location,
+        @Schema(description = "썸네일 url")
+        String thumbnailUrl,
         @Schema(description = "서점 정보")
        BookstoreResDto bookstoreResDto,
         @Schema(description = "컨텐츠 리스트")
@@ -32,6 +34,7 @@ public record PostResDto(
                 post.getPostId(),
                 post.getTitle(),
                 post.getLocation(),
+                post.getThumbnailUrl(),
                 bookstoreResDto,
                 contentResDtos,
                 productResDtos

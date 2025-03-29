@@ -29,6 +29,9 @@ public class Post extends BaseTimeEntity {
     @Column(length = 100)
     private String location;
 
+    @Column(length = 1024)
+    private String thumbnailUrl;
+
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
@@ -44,9 +47,10 @@ public class Post extends BaseTimeEntity {
     private List<Content> contents = new ArrayList<>();
 
     @Builder
-    public Post(String title , String location , Bookstore bookstore , User user){
+    public Post(String title , String location , String thumbnailUrl ,Bookstore bookstore , User user){
         this.title = title;
         this.location = location;
+        this.thumbnailUrl = thumbnailUrl;
         this.bookstore = bookstore;
         this.user = user;
     }
