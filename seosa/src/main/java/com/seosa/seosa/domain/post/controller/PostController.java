@@ -62,7 +62,7 @@ public class PostController {
     @GetMapping("/mypage")
     @Operation(summary = "마이페이지 글 조회", description = "커서 기반으로 마이페이지 내 게시물을 5개씩 조회합니다.")
     public ResponseEntity<PostCursorDto> getMyPosts(@AuthUser User user ,@Parameter(description = "마지막 북마크 ID (다음 페이지 요청 시)")
-                                                      @RequestParam(required = false , name ="cursor") Integer cursorId, @PageableDefault(size = 5) Pageable pageable) {
+                                                      @RequestParam(required = false , name ="cursor") Integer cursorId, @PageableDefault(size = 9) Pageable pageable) {
         PostCursorDto response = postService.getMyPosts(user.getUserId() ,cursorId, pageable);
         return ResponseEntity.ok(response);
     }
