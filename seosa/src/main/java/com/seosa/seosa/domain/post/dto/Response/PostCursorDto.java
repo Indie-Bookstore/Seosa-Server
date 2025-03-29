@@ -6,7 +6,7 @@ import java.util.List;
 
 public record PostCursorDto(
 
-        @Schema(description = "게시물 최신순 5개씩")
+        @Schema(description = "게시물 최신순 5 or 9개씩")
         List<PostSimpleResDto> posts,
         @Schema(description = "다음 커서로 사용될 postId")
         int cursorId ,
