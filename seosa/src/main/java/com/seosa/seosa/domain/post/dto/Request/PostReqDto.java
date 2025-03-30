@@ -18,6 +18,8 @@ public class PostReqDto {
     private String title;
     @Schema(description = "위치")
     private String location;
+    @Schema(description = "글의 썸네일")
+    private String thumbnailUrl;
     @Schema(description = "서점 정보")
     private BookstoreReqDto bookstoreReqDto;
     @Schema(description = "컨텐츠 리스트")
@@ -25,9 +27,10 @@ public class PostReqDto {
     @Schema(description = "서점 자체 상품 리스트")
     private List<ProductReqDto> productReqDtoList;
 
-    public PostReqDto(String title , String location , BookstoreReqDto bookstoreReqDto , List<ContentReqDto> contentReqDtoList, List<ProductReqDto> productReqDtoList){
+    public PostReqDto(String title , String location  , String thumbnailUrl , BookstoreReqDto bookstoreReqDto , List<ContentReqDto> contentReqDtoList, List<ProductReqDto> productReqDtoList){
         this.title = title;
         this.location = location;
+        this.thumbnailUrl = thumbnailUrl;
         this.bookstoreReqDto = bookstoreReqDto;
         this.contentReqDtoList = contentReqDtoList;
         this.productReqDtoList = productReqDtoList;
@@ -37,6 +40,7 @@ public class PostReqDto {
         return Post.builder()
                 .title(postReqDto.getTitle())
                 .location(postReqDto.getLocation())
+                .thumbnailUrl(postReqDto.thumbnailUrl)
                 .bookstore(bookstore)
                 .user(user)
                 .build();
