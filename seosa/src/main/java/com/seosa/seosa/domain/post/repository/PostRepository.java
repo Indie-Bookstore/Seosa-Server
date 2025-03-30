@@ -7,7 +7,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
 
-public interface PostRepository extends JpaRepository<Post, Long> {
+public interface PostRepository extends JpaRepository<Post, Long> , PostRepositoryCustom{
 
     @Query("select p from Post  p where p.user.userId =:userId AND p.postId =:postId")
     Optional<Post> findBypostIdAnduserId(@Param("postId") Long postId, @Param("userId") Long userId);
