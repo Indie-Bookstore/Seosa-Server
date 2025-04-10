@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface CommentRepository extends JpaRepository< Comment , Long> {
+public interface CommentRepository extends JpaRepository< Comment , Long> , CommentRepositoryCustom{
     @Query("select c from Comment  c where c.commentId =:commentId")
     Optional<Comment> findByCommentId(@Param("commentId")Long commentId);
 
