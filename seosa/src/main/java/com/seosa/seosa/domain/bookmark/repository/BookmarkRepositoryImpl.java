@@ -5,6 +5,8 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.seosa.seosa.domain.bookmark.dto.Response.BookmarkResDto;
 import com.seosa.seosa.domain.bookmark.entity.Bookmark;
 import com.seosa.seosa.domain.bookmark.entity.QBookmark;
+import com.seosa.seosa.domain.post.dto.Response.PostCursorDto;
+import com.seosa.seosa.domain.post.dto.Response.PostSimpleResDto;
 import com.seosa.seosa.domain.post.entity.QPost;
 import com.seosa.seosa.domain.user.entity.QUser;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +26,7 @@ public class BookmarkRepositoryImpl implements BookmarkRepositoryCustom {
     private final JPAQueryFactory jpaQueryFactory;
 
     @Override
-    public Page<BookmarkResDto> findMyBookmarksWithCursor(Long userId, String customCursor, Pageable pageable) {
+    public PostCursorDto findMyBookmarksWithCursor(Long userId, String customCursor, Pageable pageable) {
         QBookmark bookmark = QBookmark.bookmark;
         QUser user = QUser.user;
         QPost post = QPost.post;
@@ -43,18 +45,24 @@ public class BookmarkRepositoryImpl implements BookmarkRepositoryCustom {
                 .limit(pageable.getPageSize()+1)
                 .fetch();
 
+
+
         // 다음 커서 계산
         boolean hasNext = results.size() > pageable.getPageSize();
         if (hasNext) {
             results.remove(pageable.getPageSize()); // 9번 인덱스 지우기
         }
         // DTO
-        List<BookmarkResDto> content = results.stream()
-                .map(b -> BookmarkResDto.to(b))
+        List<PostSimpleResDto> content = results.stream()
+                .map(b -> PostSimpleResDto.from(b))
                 .toList();
 
-        //  PageImpl 생성
-        return new PageImpl<>(content, pageable, hasNext ? pageable.getPageSize() + 1 : content.size());
+        int nextCursorId = results.isEmpty() ? 0 :
+                results.get(results.size() - 1).getBookmarkId().intValue();
+
+
+
+        return new PostCursorDto(content , nextCursorId , hasNext);
     }
 
 

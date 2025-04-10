@@ -3,6 +3,8 @@ package com.seosa.seosa.domain.bookmark.controller;
 import com.seosa.seosa.domain.bookmark.dto.Response.BookmarkCursorDto;
 import com.seosa.seosa.domain.bookmark.dto.Response.BookmarkResDto;
 import com.seosa.seosa.domain.bookmark.service.BookmarkService;
+import com.seosa.seosa.domain.post.dto.Response.PostCursorDto;
+import com.seosa.seosa.domain.post.dto.Response.PostSimpleResDto;
 import com.seosa.seosa.domain.user.entity.User;
 import com.seosa.seosa.global.annotation.AuthUser;
 import io.swagger.v3.oas.annotations.Operation;
@@ -56,9 +58,9 @@ public class BookmarkController {
     /* 마이페이지 내 북마크 목록 조회 (9개씩)*/
     @GetMapping("/bookmark")
     @Operation(summary = "내 북마크 목록 조회", description = "커서 기반으로 북마크를 9개씩 조회합니다.")
-    public ResponseEntity<BookmarkCursorDto> getMyBookmarks(@AuthUser User user, @Parameter(description = "마지막 북마크 ID (다음 페이지 요청 시)")
-            @RequestParam(required = false , name ="cursor") Integer cursorId, @PageableDefault(size = 9) Pageable pageable) {
-        BookmarkCursorDto response = bookmarkService.getMyBookmarks(user.getUserId(), cursorId, pageable);
+    public ResponseEntity<PostCursorDto> getMyBookmarks(@AuthUser User user, @Parameter(description = "마지막 북마크 ID (다음 페이지 요청 시)")
+    @RequestParam(required = false , name ="cursor") Integer cursorId, @PageableDefault(size = 9) Pageable pageable) {
+        PostCursorDto response = bookmarkService.getMyBookmarks(user.getUserId(), cursorId, pageable);
         return ResponseEntity.ok(response);
     }
 }

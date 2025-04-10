@@ -1,5 +1,6 @@
 package com.seosa.seosa.domain.post.dto.Response;
 
+import com.seosa.seosa.domain.bookmark.entity.Bookmark;
 import com.seosa.seosa.domain.post.entity.Post;
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -36,4 +37,16 @@ public record PostSimpleResDto(
                   post.getCreatedAt()
           );
     }
-}
+
+    public static PostSimpleResDto from(Bookmark bookmark){
+        Post post = bookmark.getPost();
+        return new PostSimpleResDto(
+                post.getPostId(),
+                post.getTitle(),
+                post.getThumbnailUrl(),
+                post.getUser().getUserId(),
+                post.getUser().getNickname(),
+                post.getCreatedAt()
+        );
+    }
+ }

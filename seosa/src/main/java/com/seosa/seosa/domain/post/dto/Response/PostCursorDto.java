@@ -13,4 +13,5 @@ public record PostCursorDto(
         @Schema(description = "다음 페이지 존재 여부")
         boolean hasNext
 ) {
+
 }
