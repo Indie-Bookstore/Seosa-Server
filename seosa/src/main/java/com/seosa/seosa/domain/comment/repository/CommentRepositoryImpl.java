@@ -1,47 +1,49 @@
-package com.seosa.seosa.domain.bookmark.repository;
+package com.seosa.seosa.domain.comment.repository;
 
-import com.querydsl.core.types.dsl.*;
+import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import com.seosa.seosa.domain.bookmark.dto.Response.BookmarkResDto;
 import com.seosa.seosa.domain.bookmark.entity.Bookmark;
 import com.seosa.seosa.domain.bookmark.entity.QBookmark;
+import com.seosa.seosa.domain.comment.entity.Comment;
+import com.seosa.seosa.domain.comment.entity.QComment;
 import com.seosa.seosa.domain.post.dto.Response.PostCursorDto;
 import com.seosa.seosa.domain.post.dto.Response.PostSimpleResDto;
 import com.seosa.seosa.domain.post.entity.QPost;
 import com.seosa.seosa.domain.user.entity.QUser;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
+
 @RequiredArgsConstructor
 @Slf4j
-public class BookmarkRepositoryImpl implements BookmarkRepositoryCustom {
+public class CommentRepositoryImpl implements CommentRepositoryCustom{
+
 
     private final JPAQueryFactory jpaQueryFactory;
 
+    //지금은 중복처리를 못하고 있음
     @Override
-    public PostCursorDto findMyBookmarksWithCursor(Long userId, String customCursor, Pageable pageable) {
-        QBookmark bookmark = QBookmark.bookmark;
+    public PostCursorDto findMyCommentsWithCursor(Long userId, String customCursor, Pageable pageable) {
+        QComment comment = QComment.comment;
         QUser user = QUser.user;
         QPost post = QPost.post;
 
 
-        List<Bookmark> results = jpaQueryFactory
-                .select(bookmark)
-                .from(bookmark)
-                .innerJoin(bookmark.user, user).fetchJoin()
-                .innerJoin(bookmark.post, post).fetchJoin()
+        List<Comment> results = jpaQueryFactory
+                .select(comment)
+                .from(comment)
+                .innerJoin(comment.user, user).fetchJoin()
+                .innerJoin(comment.post, post).fetchJoin()
                 .where(
                         user.userId.eq(userId),
                         customCursorCondition(customCursor)
                 )
-                .orderBy(bookmark.createdAt.desc(), bookmark.bookmarkId.desc())
+                .orderBy(comment.createdAt.desc(), comment.commentId.desc())
                 .limit(pageable.getPageSize()+1)
                 .fetch();
 
@@ -54,11 +56,11 @@ public class BookmarkRepositoryImpl implements BookmarkRepositoryCustom {
         }
         // DTO
         List<PostSimpleResDto> content = results.stream()
-                .map(b -> PostSimpleResDto.from(b))
+                .map(c -> PostSimpleResDto.from(c))
                 .toList();
 
         int nextCursorId = results.isEmpty() ? 0 :
-                results.get(results.size() - 1).getBookmarkId().intValue();
+                results.get(results.size() - 1).getCommentId().intValue();
 
 
 
@@ -72,17 +74,17 @@ public class BookmarkRepositoryImpl implements BookmarkRepositoryCustom {
             return null;
         }
 
-        QBookmark bookmark = QBookmark.bookmark;
+        QComment comment = QComment.comment;
 
         String datePart = customCursor.substring(0, 14);
         String idPart = customCursor.substring(14);
 
         LocalDateTime createdAtCursor = LocalDateTime.parse(datePart, DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
-        Long bookmarkIdCursor = Long.parseLong(idPart);
+        Long commentIdCursor = Long.parseLong(idPart);
 
-        return bookmark.createdAt.lt(createdAtCursor) // createdAt보다 작거나 같고
-                .or(bookmark.createdAt.eq(createdAtCursor)
-                        .and(bookmark.bookmarkId.lt(bookmarkIdCursor))); // 북마크 id보다 작아야 함
+        return comment.createdAt.lt(createdAtCursor) // createdAt보다 작거나 같고
+                .or(comment.createdAt.eq(createdAtCursor)
+                        .and(comment.commentId.lt(commentIdCursor))); // 댓글 id보다 작아야 함
     }
 
 }
