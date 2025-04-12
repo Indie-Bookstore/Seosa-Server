@@ -56,7 +56,7 @@ public class BookmarkController {
     }
 
     /* 마이페이지 내 북마크 목록 조회 (9개씩)*/
-    @GetMapping("/bookmark")
+    @GetMapping("/bookmark/mypage")
     @Operation(summary = "내 북마크 목록 조회", description = "커서 기반으로 북마크를 9개씩 조회합니다.")
     public ResponseEntity<PostCursorDto> getMyBookmarks(@AuthUser User user, @Parameter(description = "마지막 북마크 ID (다음 페이지 요청 시)")
     @RequestParam(required = false , name ="cursor") Integer cursorId, @PageableDefault(size = 9) Pageable pageable) {
