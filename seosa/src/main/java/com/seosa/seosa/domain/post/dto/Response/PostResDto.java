@@ -1,12 +1,10 @@
 package com.seosa.seosa.domain.post.dto.Response;
 
-import com.seosa.seosa.domain.post.dto.Request.BookstoreReqDto;
-import com.seosa.seosa.domain.post.dto.Request.ContentReqDto;
-import com.seosa.seosa.domain.post.dto.Request.PostReqDto;
-import com.seosa.seosa.domain.post.dto.Request.ProductReqDto;
+
 import com.seosa.seosa.domain.post.entity.Post;
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 public record PostResDto(
@@ -20,6 +18,10 @@ public record PostResDto(
         String location,
         @Schema(description = "썸네일 url")
         String thumbnailUrl,
+
+        @Schema(description = "게시 날짜")
+        String createdAt,
+
         @Schema(description = "서점 정보")
        BookstoreResDto bookstoreResDto,
         @Schema(description = "컨텐츠 리스트")
@@ -30,11 +32,18 @@ public record PostResDto(
 ) {
 
     public static PostResDto to(Post post , BookstoreResDto bookstoreResDto ,List<ContentResDto> contentResDtos , List<ProductResDto> productResDtos){
+
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+        String formattedCreatedAt = post.getCreatedAt().format(formatter);
+
+
         return new PostResDto(
                 post.getPostId(),
                 post.getTitle(),
                 post.getLocation(),
                 post.getThumbnailUrl(),
+                formattedCreatedAt,
                 bookstoreResDto,
                 contentResDtos,
                 productResDtos
