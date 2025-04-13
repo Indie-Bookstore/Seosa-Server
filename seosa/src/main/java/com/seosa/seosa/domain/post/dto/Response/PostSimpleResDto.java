@@ -25,17 +25,27 @@ public record PostSimpleResDto(
         String userName,
 
         @Schema(description = "글 생성날짜")
-        LocalDateTime createdAt
+        LocalDateTime createdAt,
+
+        @Schema(description = "글의 북마크 수")
+        int bookmarkCount,
+
+        @Schema(description = "글의 댓글 수")
+        int commentCount
+
 ) {
 
     public  static PostSimpleResDto to(Post post){
+
           return new PostSimpleResDto(
                 post.getPostId(),
                   post.getTitle(),
                   post.getThumbnailUrl(),
                   post.getUser().getUserId(),
                   post.getUser().getNickname(),
-                  post.getCreatedAt()
+                  post.getCreatedAt(),
+                  post.getBookmarks().size(),
+                  post.getComments().size()
           );
     }
 
@@ -47,7 +57,9 @@ public record PostSimpleResDto(
                 post.getThumbnailUrl(),
                 post.getUser().getUserId(),
                 post.getUser().getNickname(),
-                post.getCreatedAt()
+                post.getCreatedAt(),
+                post.getBookmarks().size(),
+                post.getComments().size()
         );
     }
 
@@ -59,7 +71,9 @@ public record PostSimpleResDto(
                 post.getThumbnailUrl(),
                 post.getUser().getUserId(),
                 post.getUser().getNickname(),
-                post.getCreatedAt()
+                post.getCreatedAt(),
+                post.getBookmarks().size(),
+                post.getComments().size()
         );
     }
  }

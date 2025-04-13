@@ -1,5 +1,6 @@
 package com.seosa.seosa.domain.post.entity;
 
+import com.seosa.seosa.domain.bookmark.entity.Bookmark;
 import com.seosa.seosa.domain.bookstore.entity.Bookstore;
 import com.seosa.seosa.domain.comment.entity.Comment;
 import com.seosa.seosa.domain.content.entity.Content;
@@ -45,6 +46,9 @@ public class Post extends BaseTimeEntity {
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Content> contents = new ArrayList<>();
+
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Bookmark> bookmarks = new ArrayList<>();
 
     @Builder
     public Post(String title , String location , String thumbnailUrl ,Bookstore bookstore , User user){
