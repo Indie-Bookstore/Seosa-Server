@@ -2,6 +2,7 @@ package com.seosa.seosa.domain.post.dto.Response;
 
 
 import com.seosa.seosa.domain.post.entity.Post;
+import com.seosa.seosa.domain.user.entity.UserRole;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.format.DateTimeFormatter;
@@ -27,7 +28,18 @@ public record PostResDto(
         @Schema(description = "컨텐츠 리스트")
         List<ContentResDto> contentResDtoList,
         @Schema(description = "서점 자체 상품 리스트")
-     List<ProductResDto> productResDtoList
+         List<ProductResDto> productResDtoList,
+        @Schema(description = "작성자 id")
+        Long userId,
+
+        @Schema(description = "작성자 닉네임")
+        String nickname,
+
+        @Schema(description = "작성자 role")
+        UserRole userRole,
+
+        @Schema(description = "작성자 프로필 이미지")
+        String profileUrl
 
 ) {
 
@@ -46,7 +58,11 @@ public record PostResDto(
                 formattedCreatedAt,
                 bookstoreResDto,
                 contentResDtos,
-                productResDtos
+                productResDtos,
+                post.getUser().getUserId(),
+                post.getUser().getNickname(),
+                post.getUser().getUserRole(),
+                post.getUser().getProfileImage()
         );
     }
 }
