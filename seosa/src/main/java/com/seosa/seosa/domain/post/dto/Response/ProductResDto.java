@@ -7,7 +7,7 @@ public record ProductResDto(
         @Schema(description = "제품 id")
         Long productId,
         @Schema(description = "제품 제목")
-    String productName,
+        String productName,
                 @Schema(description = "제품 가격")
         int price,
         @Schema(description = "제품 이미지 url")
