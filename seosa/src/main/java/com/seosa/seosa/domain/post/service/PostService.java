@@ -57,7 +57,8 @@ public class PostService {
 
     /* 글 조회 */
     public PostResDto getPost(User user, Long postId) {
-        Post post = findPostByIdAndUser(postId, user.getUserId());
+        Post post = postRepository.findBypostId(postId)
+                .orElseThrow(() -> new CustomException(ErrorCode.POST_NOT_FOUND));
         Bookstore bookstore = findBookstoreById(post.getBookstore().getBookstoreId());
 
         List<Content> contents = contentRepository.findByPostId(postId);
