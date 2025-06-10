@@ -10,6 +10,10 @@ import java.time.LocalDateTime;
 public record CommentResDto (
         @Schema(description = "사용자 id")
         Long userId,
+
+        @Schema(description = "내 댓글인지 여부")
+        boolean isMyComment,
+
         @Schema(description = "사용자 이름")
         String name,
         @Schema(description = "사용자 프로필 이미지 url")
@@ -28,8 +32,13 @@ public record CommentResDto (
 ){
 
     public static CommentResDto to(Comment comment , User user , Post post){
+        boolean isMyComment = false;
+        if(comment.getUser().getUserId().equals(user.getUserId())){
+            isMyComment = true;
+        }
         return new CommentResDto(
                 user.getUserId(),
+                isMyComment,
                 user.getNickname(),
                 user.getProfileImage(),
                 comment.getCommentId(),
