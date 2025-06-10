@@ -11,6 +11,8 @@ import com.seosa.seosa.global.annotation.AuthUser;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -44,14 +46,7 @@ public class UserController {
         return ResponseEntity.ok(Map.of("message", "프로필 수정이 완료되었습니다."));
     }
 
-    @PatchMapping("/password")
-    @Operation(summary = "회원 비밀번호 수정", description = "회원 비밀번호 정보를 수정합니다.")
-    public ResponseEntity<Map<String, String>> updateUserPassword(
-            @AuthUser User user,
-            @RequestBody @Valid UpdatePasswordRequestDTO request) {
-        userService.updateUserPassword(user, request);
-        return ResponseEntity.ok(Map.of("message", "비밀번호 변경이 완료되었습니다."));
-    }
+
 
     @DeleteMapping
     @Operation(summary = "회원 탈퇴", description = "회원을 탈퇴합니다.")
@@ -71,7 +66,10 @@ public class UserController {
 
     @GetMapping("/checkEmail")
     @Operation(summary = "이메일 중복확인", description = "이메일 중복 여부를 확인하고 유효성을 검증합니다.")
-    public ResponseEntity<Map<String, String>> checkEmail(@RequestParam("email") String email) {
+    public ResponseEntity<Map<String, String>> checkEmail(
+            @NotBlank(message = "이메일은 필수 입력 값입니다.")
+            @Email(message = "이메일 형식이 올바르지 않습니다.")
+            @RequestParam("email") String email) {
 
         checkService.checkEmail(email);
         return ResponseEntity.ok(Map.of("message", "사용 가능한 이메일입니다."));
@@ -79,21 +77,30 @@ public class UserController {
 
     @GetMapping("/sendVerificationCode")
     @Operation(summary = "인증번호 전송", description = "회원 이메일로 인증번호를 전송합니다.")
-    public ResponseEntity<Map<String, String>> sendVerificationCode(@AuthUser User user,
-                                                       @RequestParam("email")
-                                                       String email) {
+    public ResponseEntity<Map<String, String>> sendVerificationCode(
+            @RequestParam("email") String email) {
 
-        verificationService.sendVerificationCode(user, email);
+        verificationService.sendVerificationCode(email);
         return ResponseEntity.ok(Map.of("message", "이메일로 인증번호를 전송했습니다."));
     }
 
     @GetMapping("/checkVerificationCode")
     @Operation(summary = "본인인증", description = "입력한 인증번호가 전송된 인증코드와 일치하는지 확인합니다.")
-    public ResponseEntity<Map<String, String>> checkVerificationCode(@AuthUser User user,
-                                                        @RequestParam("verificationCode")
-                                                        String verificationCode) {
+    public ResponseEntity<Map<String, String>> checkVerificationCode(
+            @RequestParam("email") String email,
+            @RequestParam("verificationCode") String verificationCode) {
 
-        verificationService.checkVerificationCode(user, verificationCode);
+        verificationService.checkVerificationCode(email, verificationCode);
         return ResponseEntity.ok(Map.of("message", "인증번호가 확인되었습니다."));
+    }
+
+    @PatchMapping("/password")
+    @Operation(summary = "회원 비밀번호 수정", description = "회원 비밀번호 정보를 수정합니다.")
+    public ResponseEntity<Map<String, String>> updateUserPassword(
+            @RequestParam("email") String email,
+            @RequestBody @Valid UpdatePasswordRequestDTO request) {
+
+        userService.updateUserPassword(email, request);
+        return ResponseEntity.ok(Map.of("message", "비밀번호 변경이 완료되었습니다."));
     }
 }

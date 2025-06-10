@@ -9,6 +9,8 @@ import com.seosa.seosa.domain.user.repository.UserRepository;
 import com.seosa.seosa.global.exception.CustomException;
 import com.seosa.seosa.global.exception.ErrorCode;
 import jakarta.transaction.Transactional;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -33,10 +35,17 @@ public class UserService {
     }
 
     @Transactional
-    public void updateUserPassword(User user, UpdatePasswordRequestDTO request) {
+    public void updateUserPassword(@NotBlank(message = "이메일은 필수 입력 값입니다.")
+                                       @Email(message = "이메일 형식이 올바르지 않습니다.")
+                                       String email,
+                                   UpdatePasswordRequestDTO request) {
         if (!Objects.equals(request.getNewPassword1(), request.getNewPassword2())) {
             throw new CustomException(ErrorCode.PASSWORD_MISMATCH);
         }
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
         user.updatePassword(passwordEncoder.encode(request.getNewPassword1()));
     }
 

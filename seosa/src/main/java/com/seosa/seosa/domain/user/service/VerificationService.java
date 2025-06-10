@@ -1,6 +1,7 @@
 package com.seosa.seosa.domain.user.service;
 
 import com.seosa.seosa.domain.user.entity.User;
+import com.seosa.seosa.domain.user.repository.UserRepository;
 import com.seosa.seosa.global.annotation.AuthUser;
 import com.seosa.seosa.global.exception.CustomException;
 import com.seosa.seosa.global.exception.ErrorCode;
@@ -22,21 +23,22 @@ public class VerificationService {
 
     private final EmailService emailService;  // 이메일 전송 서비스
     private final StringRedisTemplate redisTemplate; // Redis 사용
+    private final UserRepository userRepository;
 
     private static final long EXPIRATION_TIME = 5; // 인증번호 유효 시간 (5분)
 
     /**
      * 인증번호 생성 및 이메일 전송
      */
-    public void sendVerificationCode(@AuthUser User user,
-                                     @NotBlank(message = "이메일은 필수 입력 값입니다.")
+    public void sendVerificationCode(@NotBlank(message = "이메일은 필수 입력 값입니다.")
                                      @Email(message = "이메일 형식이 올바르지 않습니다.")
                                      String email) {
 
-        // 입력한 이메일이 회원정보와 일치하는지 확인
-        String userEmail = user.getEmail();
-        if (!userEmail.equals(email)) {
-            throw new CustomException(ErrorCode.USER_EMAIL_MISMATCH);
+        String userEmail = email;
+
+        // DB에서 이메일 존재 여부 확인
+        if(!userRepository.existsByEmail(userEmail)) {
+            throw new CustomException(ErrorCode.USER_NOT_FOUND);
         }
 
         // 인증번호 생성
@@ -53,8 +55,12 @@ public class VerificationService {
     /**
      * 입력한 인증번호가 저장된 인증번호와 일치하는지 확인
      */
-    public void checkVerificationCode(@AuthUser User user, String verificationCode) {
-        String email = user.getEmail(); // 회원 이메일
+    public void checkVerificationCode(@NotBlank(message = "이메일은 필수 입력 값입니다.")
+                                      @Email(message = "이메일 형식이 올바르지 않습니다.")
+                                      String email,
+
+                                      @NotBlank(message = "인증코드는 필수 입력 값입니다.")
+                                      String verificationCode) {
 
         // Redis에서 저장된 인증번호 조회
         ValueOperations<String, String> ops = redisTemplate.opsForValue();
