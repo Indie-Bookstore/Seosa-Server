@@ -53,11 +53,8 @@ public class SecurityConfig {
 
             "/oauth2/**",
             "/login/oauth2/code/*",
-
             "/test/**",
-
-            "/s3/presign",
-
+            "/s3/presigned/**",
             "/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs", "/v3/api-docs/**"
     };
 

@@ -16,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
@@ -34,10 +35,14 @@ public class JWTFilter extends OncePerRequestFilter {
         this.userRepository = userRepository;
     }
 
+    private static final AntPathMatcher pathMatcher = new AntPathMatcher();
+
+
     // SecurityConfig.AUTH_WHITELIST를 활용하여 JWT 필터 제외 경로 동기화
     private boolean isExcludedFromJwtFilter(String requestURI) {
+        log.info("들어온 URL {}" , requestURI);
         return Arrays.stream(SecurityConfig.AUTH_WHITELIST)
-                .anyMatch(requestURI::startsWith);
+                .anyMatch(pattern -> pathMatcher.match(pattern, requestURI));
     }
 
     @Override
