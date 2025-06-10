@@ -42,6 +42,10 @@ public class SecurityConfig {
             "/user/checkEmail",
             "/user/checkNickname",
 
+            "/user/sendVerificationCode",
+            "/user/checkVerificationCode",
+            "/user/password",
+
             "/local/login",
             "/local/signup",
 
