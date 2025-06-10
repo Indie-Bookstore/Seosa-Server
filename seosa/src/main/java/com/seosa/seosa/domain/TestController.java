@@ -15,6 +15,11 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class TestController {
 
+    @GetMapping("")
+    public String test() {
+        return "test ok";
+    }
+
     @GetMapping("/redirectOrg")
     public void redirectOrg(HttpServletResponse response) throws IOException {
 

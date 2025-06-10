@@ -52,6 +52,8 @@ public class SecurityConfig {
 
             "/test/**",
 
+            "/s3/presign",
+
             "/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs", "/v3/api-docs/**"
     };
 
