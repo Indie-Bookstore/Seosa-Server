@@ -2,6 +2,7 @@ package com.seosa.seosa.domain.comment.controller;
 
 import com.seosa.seosa.domain.comment.dto.Request.CommentReqDto;
 import com.seosa.seosa.domain.comment.dto.Response.CommentResDto;
+import com.seosa.seosa.domain.comment.dto.Response.MyCommentListDto;
 import com.seosa.seosa.domain.comment.service.CommentService;
 import com.seosa.seosa.domain.post.dto.Response.PostCursorDto;
 import com.seosa.seosa.domain.user.entity.User;
@@ -70,9 +71,9 @@ public class CommentController {
     /* 마이페이지 내 댓글 목록 조회 (9개씩)*/
     @GetMapping("/mypage")
     @Operation(summary = "내 댓글 목록 조회", description = "커서 기반으로 댓글을 9개씩 조회합니다.")
-    public ResponseEntity<PostCursorDto> getMyComments(@AuthUser User user, @Parameter(description = "마지막 댓글 ID (다음 페이지 요청 시)")
+    public ResponseEntity<MyCommentListDto> getMyComments(@AuthUser User user, @Parameter(description = "마지막 댓글 ID (다음 페이지 요청 시)")
     @RequestParam(required = false , name ="cursor") Integer cursorId, @PageableDefault(size = 9) Pageable pageable) {
-        PostCursorDto response = commentService.getMyComments(user.getUserId(), cursorId, pageable);
+        MyCommentListDto response = commentService.getMyComments(user.getUserId(), cursorId, pageable);
         return ResponseEntity.ok(response);
     }
 }

@@ -4,6 +4,8 @@ import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.seosa.seosa.domain.bookmark.entity.Bookmark;
 import com.seosa.seosa.domain.bookmark.entity.QBookmark;
+import com.seosa.seosa.domain.comment.dto.Response.MyCommentDetailDto;
+import com.seosa.seosa.domain.comment.dto.Response.MyCommentListDto;
 import com.seosa.seosa.domain.comment.entity.Comment;
 import com.seosa.seosa.domain.comment.entity.QComment;
 import com.seosa.seosa.domain.post.dto.Response.PostCursorDto;
@@ -28,7 +30,7 @@ public class CommentRepositoryImpl implements CommentRepositoryCustom{
 
     //지금은 중복처리를 못하고 있음
     @Override
-    public PostCursorDto findMyCommentsWithCursor(Long userId, String customCursor, Pageable pageable) {
+    public MyCommentListDto findMyCommentsWithCursor(Long userId, String customCursor, Pageable pageable) {
         QComment comment = QComment.comment;
         QUser user = QUser.user;
         QPost post = QPost.post;
@@ -55,16 +57,14 @@ public class CommentRepositoryImpl implements CommentRepositoryCustom{
             results.remove(pageable.getPageSize()); // 9번 인덱스 지우기
         }
         // DTO
-        List<PostSimpleResDto> content = results.stream()
-                .map(c -> PostSimpleResDto.from(c))
+        List<MyCommentDetailDto> content = results.stream()
+                .map(c -> MyCommentDetailDto.to(c))
                 .toList();
 
         int nextCursorId = results.isEmpty() ? 0 :
                 results.get(results.size() - 1).getCommentId().intValue();
 
-
-
-        return new PostCursorDto(content , nextCursorId , hasNext);
+        return new MyCommentListDto(content , nextCursorId , hasNext);
     }
 
 
