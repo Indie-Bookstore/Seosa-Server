@@ -3,6 +3,7 @@ package com.seosa.seosa.domain.comment.service;
 import com.seosa.seosa.domain.bookmark.entity.Bookmark;
 import com.seosa.seosa.domain.comment.dto.Request.CommentReqDto;
 import com.seosa.seosa.domain.comment.dto.Response.CommentResDto;
+import com.seosa.seosa.domain.comment.dto.Response.MyCommentListDto;
 import com.seosa.seosa.domain.comment.entity.Comment;
 import com.seosa.seosa.domain.comment.repository.CommentRepository;
 import com.seosa.seosa.domain.post.dto.Response.PostCursorDto;
@@ -94,7 +95,7 @@ public class CommentService {
 //        return commentResDtos;
 //    }
 
-    public PostCursorDto getMyComments(Long userId, Integer cursorId, Pageable pageable) {
+    public MyCommentListDto getMyComments(Long userId, Integer cursorId, Pageable pageable) {
 
         // 커서 문자열 생성 (cursorId가 null일 경우 첫 페이지)
         String customCursor = null;
@@ -107,7 +108,7 @@ public class CommentService {
         }
 
         // 페이징된 북마크 조회
-        PostCursorDto pages = commentRepository.findMyCommentsWithCursor(userId, customCursor, pageable);
+        MyCommentListDto pages = commentRepository.findMyCommentsWithCursor(userId, customCursor, pageable);
 
         return pages;
     }
