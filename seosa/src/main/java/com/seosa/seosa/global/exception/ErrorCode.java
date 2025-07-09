@@ -46,6 +46,7 @@ public enum ErrorCode {
     POST_NOT_FOUND(HttpStatus.NOT_FOUND , "해당 포스트를 찾을 수 없습니다."),
     //북마크 관련 에러
     BOOKMARK_NOT_FOUND(HttpStatus.NOT_FOUND , "해당 북마크를 찾을 수 없습니다."),
+    BOOKMARK_DUPLICATED(HttpStatus.BAD_REQUEST, "이미 북마크한 게시물입니다."),
 
     // FAQ 관련 에러
     FAQ_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 FAQ를 찾을 수 없습니다.");

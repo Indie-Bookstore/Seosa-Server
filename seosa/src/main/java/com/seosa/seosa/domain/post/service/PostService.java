@@ -1,5 +1,6 @@
 package com.seosa.seosa.domain.post.service;
 
+import com.seosa.seosa.domain.bookmark.repository.BookmarkRepository;
 import com.seosa.seosa.domain.bookstore.entity.Bookstore;
 import com.seosa.seosa.domain.bookstore.repository.BookstoreRepository;
 import com.seosa.seosa.domain.content.entity.Content;
@@ -35,6 +36,7 @@ import java.util.stream.Collectors;
 public class PostService {
 
     private final BookstoreRepository bookstoreRepository;
+    private final BookmarkRepository bookmarkRepository;
     private final PostRepository postRepository;
     private final ContentRepository contentRepository;
     private final ProductRepository productRepository;
@@ -52,7 +54,7 @@ public class PostService {
         List<Content> contentList = saveContents(postReqDto.getContentReqDtoList(), post);
         List<Product> productList = saveProducts(postReqDto.getProductReqDtoList(), bookstore);
 
-        return convertToPostResDto(post, bookstore, contentList, productList);
+        return convertToPostResDto(user , post, bookstore, contentList, productList);
     }
 
     /* 글 조회 */
@@ -64,7 +66,7 @@ public class PostService {
         List<Content> contents = contentRepository.findByPostId(postId);
         List<Product> products = productRepository.findByBookstoreId(bookstore.getBookstoreId());
 
-        return convertToPostResDto(post, bookstore, contents, products);
+        return convertToPostResDto(user , post, bookstore, contents, products);
     }
 
     /* 글 삭제 */
@@ -87,7 +89,8 @@ public class PostService {
     }
 
     /* PostResDto 변환 */
-    private PostResDto convertToPostResDto(Post post, Bookstore bookstore, List<Content> contents, List<Product> products) {
+    private PostResDto convertToPostResDto(User user , Post post, Bookstore bookstore, List<Content> contents, List<Product> products) {
+
         BookstoreResDto bookstoreResDto = BookstoreResDto.to(bookstore);
         List<ContentResDto> contentResDtos = contents.stream()
                 .map(ContentResDto::to)
@@ -95,8 +98,9 @@ public class PostService {
         List<ProductResDto> productResDtos = products.stream()
                 .map(ProductResDto::to)
                 .collect(Collectors.toList());
+        boolean isBookmarked = bookmarkRepository.existsByUserIdAndPostId(user.getUserId() , post.getPostId());
 
-        return PostResDto.to(post, bookstoreResDto, contentResDtos, productResDtos);
+        return PostResDto.to(post, bookstoreResDto, contentResDtos, productResDtos , isBookmarked);
     }
 
     /* 관리자 권한 확인 */

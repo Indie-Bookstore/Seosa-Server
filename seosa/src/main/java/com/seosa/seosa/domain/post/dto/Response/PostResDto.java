@@ -39,11 +39,14 @@ public record PostResDto(
         UserRole userRole,
 
         @Schema(description = "작성자 프로필 이미지")
-        String profileUrl
+        String profileUrl,
+
+        @Schema(description = "현재 사용자의 북마크 여부")
+        boolean isBookmarked
 
 ) {
 
-    public static PostResDto to(Post post , BookstoreResDto bookstoreResDto ,List<ContentResDto> contentResDtos , List<ProductResDto> productResDtos){
+    public static PostResDto to(Post post , BookstoreResDto bookstoreResDto ,List<ContentResDto> contentResDtos , List<ProductResDto> productResDtos , boolean isBookmarked){
 
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
@@ -62,7 +65,8 @@ public record PostResDto(
                 post.getUser().getUserId(),
                 post.getUser().getNickname(),
                 post.getUser().getUserRole(),
-                post.getUser().getProfileImage()
+                post.getUser().getProfileImage(),
+                isBookmarked
         );
     }
 }

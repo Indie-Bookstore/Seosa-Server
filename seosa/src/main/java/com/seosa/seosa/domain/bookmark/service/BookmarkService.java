@@ -33,6 +33,10 @@ public class BookmarkService {
 
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new CustomException(ErrorCode.POST_NOT_FOUND));
+        // 이미 북마크한 post에 또 북마크 시도 시 에러 발생
+        if(bookmarkRepository.existsByUserIdAndPostId(user.getUserId() , post.getPostId())){
+            throw new CustomException(ErrorCode.BOOKMARK_DUPLICATED);
+        }
 
         Bookmark bookmark = Bookmark.builder()
                 .post(post)
@@ -60,8 +64,8 @@ public class BookmarkService {
 
 
     /* 북마크 삭제 */
-    public String deleteBookmark(User user, Long bookmarkId) {
-        Bookmark bookmark = bookmarkRepository.findById(bookmarkId)
+    public String deleteBookmark(User user, Long postId) {
+        Bookmark bookmark = bookmarkRepository.findByUserIdAndPostId(user.getUserId() , postId)
                 .orElseThrow(() -> new CustomException(ErrorCode.BOOKMARK_NOT_FOUND));
 
         if(!bookmark.getUser().getUserId().equals(user.getUserId())){
