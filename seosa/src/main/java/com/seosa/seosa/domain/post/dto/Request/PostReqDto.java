@@ -36,7 +36,7 @@ public class PostReqDto {
         this.productReqDtoList = productReqDtoList;
     }
 
-    public static Post toEntity(PostReqDto postReqDto , Bookstore bookstore , User user){
+    public static Post toEntity(PostReqDto postReqDto  , Bookstore bookstore , User user){
         return Post.builder()
                 .title(postReqDto.getTitle())
                 .location(postReqDto.getLocation())

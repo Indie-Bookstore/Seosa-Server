@@ -24,7 +24,7 @@ public class S3Service {
     @Value("${cloud.aws.s3.bucket}")
     private String bucket;
 
-    // Presigned URL 발급
+    // Presigned URL 발급  , url -> presigned url , objectKey -> s3 객체 key
     public Map<String, String> getPresignedUrl(String prefix, String fileName) {
         if (!prefix.isEmpty()) {
             fileName = createPath(prefix, fileName);
@@ -33,7 +33,7 @@ public class S3Service {
         GeneratePresignedUrlRequest generatePresignedUrlRequest = getGeneratePresignedUrlRequest(bucket, fileName);
         URL url = amazonS3.generatePresignedUrl(generatePresignedUrlRequest);
 
-        return Map.of("url", url.toString());
+        return Map.of("url", url.toString() , "objectKey" , fileName );
     }
 
 
