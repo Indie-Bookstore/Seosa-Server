@@ -4,6 +4,7 @@ import com.seosa.seosa.domain.bookmark.repository.BookmarkRepository;
 import com.seosa.seosa.domain.bookstore.entity.Bookstore;
 import com.seosa.seosa.domain.bookstore.repository.BookstoreRepository;
 import com.seosa.seosa.domain.content.entity.Content;
+import com.seosa.seosa.domain.content.entity.ContentType;
 import com.seosa.seosa.domain.content.repository.ContentRepository;
 import com.seosa.seosa.domain.post.dto.Request.BookstoreReqDto;
 import com.seosa.seosa.domain.post.dto.Request.ContentReqDto;
@@ -20,6 +21,7 @@ import com.seosa.seosa.global.exception.CustomException;
 import com.seosa.seosa.global.exception.ErrorCode;
 import com.seosa.seosa.global.utils.CursorUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -40,6 +42,12 @@ public class PostService {
     private final PostRepository postRepository;
     private final ContentRepository contentRepository;
     private final ProductRepository productRepository;
+
+    @Value("${cloud.aws.s3.bucket}")
+    private String bucket;
+
+    @Value("${cloud.aws.region}")
+    private String region;
 
     /* 글 등록 */
     public PostResDto registerPost(User user, PostReqDto postReqDto) {
@@ -125,15 +133,31 @@ public class PostService {
     /* Content 저장 */
     private List<Content> saveContents(List<ContentReqDto> contentReqDtoList, Post post) {
         List<Content> contentList = contentReqDtoList.stream()
-                .map(contentReqDto -> ContentReqDto.toEntity(contentReqDto, post))
+                .map(dto -> {
+                    if (dto.getContentType() == ContentType.img_url) {
+                        String s3Url = buildS3Url(dto.getContent()); // 객체 키 → 정적 URL
+                        dto = new ContentReqDto(dto.getContentType(), s3Url, dto.getOrder_index());
+                    }
+                    return ContentReqDto.toEntity(dto, post);
+                })
                 .collect(Collectors.toList());
+
         return contentRepository.saveAll(contentList);
+    }
+
+    /* 객체 key 기반 정적 url 만들기 */
+    private String buildS3Url(String objectKey){
+        String imageUrl = "https://" + bucket + ".s3." + region + ".amazonaws.com/" + objectKey;
+        return imageUrl;
     }
 
     /*  Product 저장 */
     private List<Product> saveProducts(List<ProductReqDto> productReqDtoList, Bookstore bookstore) {
         List<Product> productList = productReqDtoList.stream()
-                .map(productReqDto -> ProductReqDto.toEntity(productReqDto, bookstore))
+                .map(productReqDto -> {
+                       String s3ImgUrl = buildS3Url( productReqDto.getProductImg());
+                       return ProductReqDto.toEntity(productReqDto , s3ImgUrl, bookstore);
+                })
                 .collect(Collectors.toList());
         return productRepository.saveAll(productList);
     }

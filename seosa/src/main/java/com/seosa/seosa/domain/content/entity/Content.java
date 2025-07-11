@@ -21,7 +21,7 @@ public class Content {
     @Enumerated(EnumType.STRING)
     private ContentType contentType;
 
-    @Column(length = 100)
+    @Column(length = 1024)
     private String body;
 
     @Column
