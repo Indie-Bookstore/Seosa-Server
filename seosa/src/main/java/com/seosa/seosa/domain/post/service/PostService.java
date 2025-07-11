@@ -27,6 +27,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -133,13 +136,16 @@ public class PostService {
     /* Content 저장 */
     private List<Content> saveContents(List<ContentReqDto> contentReqDtoList, Post post) {
         List<Content> contentList = contentReqDtoList.stream()
-                .map(dto -> {
-                    if (dto.getContentType() == ContentType.img_url) {
-                        String s3Url = buildS3Url(dto.getContent()); // 객체 키 → 정적 URL
-                        dto = new ContentReqDto(dto.getContentType(), s3Url, dto.getOrder_index());
-                    }
-                    return ContentReqDto.toEntity(dto, post);
-                })
+               .map(dto -> {
+                                if (dto.getContentType() == ContentType.img_url) {
+                                    if (dto.getContent() == null || dto.getContent().trim().isEmpty()) {
+                                        throw new CustomException(ErrorCode.INVALID_CONTENT_REQUEST);
+                                    }
+                                    String s3Url = buildS3Url(dto.getContent()); // 객체 키 → 정적 URL
+                                    dto = new ContentReqDto(dto.getContentType(), s3Url, dto.getOrder_index());
+                                }
+                                return ContentReqDto.toEntity(dto, post);
+                            })
                 .collect(Collectors.toList());
 
         return contentRepository.saveAll(contentList);
@@ -147,7 +153,20 @@ public class PostService {
 
     /* 객체 key 기반 정적 url 만들기 */
     private String buildS3Url(String objectKey){
-        String imageUrl = "https://" + bucket + ".s3." + region + ".amazonaws.com/" + objectKey;
+        if (objectKey == null || objectKey.trim().isEmpty()) {
+            throw new CustomException(ErrorCode.INVALID_OBJECT_KEY);
+        }
+
+        // 특수 문자 포함시
+        String encodedKey;
+        try {
+            encodedKey = URLEncoder.encode(objectKey, StandardCharsets.UTF_8.toString())
+                    .replace("+", "%20");
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException("객체 키를 encoding하는데 실패하였습니다", e);
+        }
+
+        String imageUrl = "https://" + bucket + ".s3." + region + ".amazonaws.com/" + encodedKey;
         return imageUrl;
     }
 
@@ -155,8 +174,11 @@ public class PostService {
     private List<Product> saveProducts(List<ProductReqDto> productReqDtoList, Bookstore bookstore) {
         List<Product> productList = productReqDtoList.stream()
                 .map(productReqDto -> {
-                       String s3ImgUrl = buildS3Url( productReqDto.getProductImg());
-                       return ProductReqDto.toEntity(productReqDto , s3ImgUrl, bookstore);
+                    if (productReqDto.getProductImg() == null || productReqDto.getProductImg().trim().isEmpty()) {
+                        throw new CustomException(ErrorCode.INVALID_PRODUCT_REQUEST);
+                    }
+                    String s3ImgUrl = buildS3Url( productReqDto.getProductImg());
+                    return ProductReqDto.toEntity(productReqDto , s3ImgUrl, bookstore);
                 })
                 .collect(Collectors.toList());
         return productRepository.saveAll(productList);
