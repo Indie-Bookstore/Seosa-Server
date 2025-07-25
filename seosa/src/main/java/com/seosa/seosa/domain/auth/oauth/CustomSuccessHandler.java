@@ -48,14 +48,19 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
             refreshTokenService.saveRefreshToken(userId, refreshToken);
 
             String uri;
-            // 임시 유저라면 추가 정보기입 페이지로 리다이렉트
+
+            // 임시 유저(최초 로그인 상태)
+            // 추가 정보기입 페이지로 리다이렉트 (닉네임과 인증코드 입력 페이지)
             if (Objects.equals(role, "TEMP_USER")) {
-                uri = "http://10.240.11.153:8081/Auth";
+                uri = "seosa://onboarding";
+                // uri값 예시: myapp://oauthdomain
+                // 완료시 이런식으로 리다이렉트됩니다: myapp://oauthdomain?accessToken=eyJ&refreshToken=ey
             }
 
-            // 일반 유저라면 메인 페이지로 리다이렉트
+            // 일반 유저
+            // 메인 페이지로 리다이렉트
             else {
-                uri = "http://10.240.11.153:8081/Main";
+                uri = "seosa://home";
             }
 
             System.out.println(uri);
