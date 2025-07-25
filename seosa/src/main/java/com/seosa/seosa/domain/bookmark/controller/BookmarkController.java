@@ -48,10 +48,10 @@ public class BookmarkController {
 //    }
 
     /* 북마크 삭제 */
-    @DeleteMapping("/bookmark/{bookmarkId}")
+    @DeleteMapping("/{postId}/bookmark")
     @Operation(summary = "특정 북마크 취소", description = "사용자가 자신의 북마크를 취소합니다.")
-    public ResponseEntity<String> deleteBookmark(@AuthUser User user , @PathVariable("bookmarkId")Long bookmarkId){
-        String response = bookmarkService.deleteBookmark(user , bookmarkId);
+    public ResponseEntity<String> deleteBookmark(@AuthUser User user , @PathVariable("postId")Long postId){
+        String response = bookmarkService.deleteBookmark(user , postId);
         return ResponseEntity.ok(response);
     }
 

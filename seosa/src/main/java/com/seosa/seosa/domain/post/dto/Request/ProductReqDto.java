@@ -27,11 +27,11 @@ public class ProductReqDto {
         this.description = description;
     }
 
-    public static Product toEntity(ProductReqDto productReqDto , Bookstore bookstore){
+    public static Product toEntity(ProductReqDto productReqDto , String s3ImgUrl , Bookstore bookstore){
         return Product.builder()
                 .productName(productReqDto.getProductName())
                 .price(productReqDto.getPrice())
-                .productImg(productReqDto.getProductImg())
+                .productImg(s3ImgUrl)
                 .description(productReqDto.getDescription())
                 .bookstore(bookstore)
                 .build();
