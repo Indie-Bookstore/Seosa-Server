@@ -10,4 +10,6 @@ public interface PostRepositoryCustom {
     Page<PostSimpleResDto> findMainPostsWithCursor(String customCursor, Pageable pageable);
 
     Page<PostSimpleResDto> findMyPostsWithCursor(Long userId ,String customCursor, Pageable pageable);
+
+    Page<PostSimpleResDto> findAllPostsWithOffset(Pageable pageable);
 }

@@ -2,7 +2,9 @@ package com.seosa.seosa.domain.post.controller;
 
 import com.seosa.seosa.domain.post.dto.Request.PostReqDto;
 import com.seosa.seosa.domain.post.dto.Response.PostCursorDto;
+import com.seosa.seosa.domain.post.dto.Response.PostOffsetDto;
 import com.seosa.seosa.domain.post.dto.Response.PostResDto;
+import com.seosa.seosa.domain.post.dto.Response.PostSimpleResDto;
 import com.seosa.seosa.domain.post.service.PostService;
 import com.seosa.seosa.domain.user.entity.User;
 import io.swagger.v3.oas.annotations.Operation;
@@ -55,6 +57,15 @@ public class PostController {
     public ResponseEntity<PostCursorDto> getMainPosts(@Parameter(description = "마지막 북마크 ID (다음 페이지 요청 시)")
     @RequestParam(required = false , name ="cursor") Integer cursorId, @PageableDefault(size = 5) Pageable pageable) {
         PostCursorDto response = postService.getMainPosts(cursorId, pageable);
+        return ResponseEntity.ok(response);
+    }
+
+    /* 오프셋 기반 메인 페이지 글 목록 조회 : 5개씩 */
+    @GetMapping("/main/offset")
+    @Operation(summary = "메인 페이지 글 조회 (오프셋 기반)", description = "오프셋 기반으로 메인 페이지 게시물을 5개씩 조회합니다.")
+    public ResponseEntity<PostOffsetDto> getMainPostsWithOffset(
+            @PageableDefault(size = 5) Pageable pageable) {
+        PostOffsetDto response = postService.findAllPostsWithOffset(pageable);
         return ResponseEntity.ok(response);
     }
 

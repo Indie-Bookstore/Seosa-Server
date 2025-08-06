@@ -55,7 +55,9 @@ public class SecurityConfig {
             "/login/oauth2/code/*",
             "/test/**",
             "/s3/presigned/**",
-            "/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs", "/v3/api-docs/**"
+            "/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs", "/v3/api-docs/**",
+            "/actuator/prometheus",
+            "/actuator/**"
     };
 
     // AuthenticationManager Bean 등록

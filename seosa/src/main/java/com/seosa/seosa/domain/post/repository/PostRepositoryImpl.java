@@ -53,6 +53,32 @@ public class PostRepositoryImpl implements PostRepositoryCustom{
         return new PageImpl<>(content, pageable, hasNext ? pageable.getPageSize() + 1 : content.size());
     }
 
+    /* 메인 페이지에서 offset 기반 페이지네이션 */
+    public Page<PostSimpleResDto> findAllPostsWithOffset(Pageable pageable) {
+        QPost post = QPost.post;
+        QUser user = QUser.user;
+
+        List<Post> results = jpaQueryFactory
+                .select(post)
+                .from(post)
+                .innerJoin(post.user, user).fetchJoin()
+                .orderBy(post.createdAt.desc(), post.postId.desc())
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .fetch();
+
+        List<PostSimpleResDto> content = results.stream()
+                .map(PostSimpleResDto::to)
+                .toList();
+
+        Long total = jpaQueryFactory
+                .select(post.count())
+                .from(post)
+                .fetchOne();
+
+        return new PageImpl<>(content, pageable, total != null ? total : 0);
+    }
+
     /* 마이페이지에서 내 글 목록 조회 */
     public Page<PostSimpleResDto> findMyPostsWithCursor(Long userId ,String customCursor, Pageable pageable) {
         QPost post = QPost.post;

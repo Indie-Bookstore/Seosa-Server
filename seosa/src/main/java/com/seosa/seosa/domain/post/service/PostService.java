@@ -185,7 +185,7 @@ public class PostService {
     }
 
     /* 메인 페이지에서 게시물 5개씩 조회 */
-    public PostCursorDto getMainPosts( Integer cursorId, Pageable pageable) {
+    public PostCursorDto getMainPosts(Integer cursorId, Pageable pageable) {
 
         // 커서 문자열 생성 (cursorId가 null일 경우 첫 페이지)
         String customCursor = null;
@@ -200,15 +200,20 @@ public class PostService {
         // 페이징된 게시물 조회
         Page<PostSimpleResDto> page = postRepository.findMainPostsWithCursor(customCursor, pageable);
 
-
         List<PostSimpleResDto> content = page.getContent();
         boolean hasNext = page.hasNext() ? true : false;
         int nextCursorId = content.isEmpty() ? 0 : content.get(content.size() - 1).postId().intValue();
 
 
-
         return new PostCursorDto(content, nextCursorId, hasNext);
     }
+
+    /* 오프셋 기반 메인 페이지 글 조회 : 5개씩 */
+    public PostOffsetDto findAllPostsWithOffset(Pageable pageable) {
+        Page<PostSimpleResDto> content = postRepository.findAllPostsWithOffset(pageable);
+        return PostOffsetDto.from(content);
+    }
+
 
     /* 마이페이지에서 내가 쓴 글 조회 : 5개씩*/
     public PostCursorDto getMyPosts(Long userId, Integer cursorId, Pageable pageable) {
