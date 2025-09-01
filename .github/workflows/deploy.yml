@@ -47,17 +47,17 @@ jobs:
       - name: Docker 이미지 생성
         run: |
           cd ./seosa
-          docker build -t seosa-server .
+          docker build -t seosa-ecr .
 
       - name: Docker 이미지에 Tag 붙이기
         run: |
           cd ./seosa
-          docker tag seosa-server ${{ steps.login-ecr.outputs.registry }}/seosa-server:latest
+          docker tag seosa-ecr ${{ steps.login-ecr.outputs.registry }}/seosa-ecr:latest
 
       - name: ECR에 Docker 이미지 Push하기
         run: |
           cd ./seosa
-          docker push ${{ steps.login-ecr.outputs.registry }}/seosa-server:latest
+          docker push ${{ steps.login-ecr.outputs.registry }}/seosa-ecr:latest
 
       - name: SSH로 EC2에 접속하여 배포 및 상태 확인
         uses: appleboy/ssh-action@v1.0.3
@@ -91,18 +91,18 @@ jobs:
             fi
 
             echo "🔝 기존 케이드 중지/삭제"
-            docker stop seosa-server || true
-            docker rm seosa-server || true
+            docker stop seosa-ecr || true
+            docker rm seosa-ecr || true
 
             echo "⬇️ 최신 이미지 가져오기"
-            docker pull ${{ steps.login-ecr.outputs.registry }}/seosa-server:latest
+            docker pull ${{ steps.login-ecr.outputs.registry }}/seosa-ecr:latest
 
             echo "🚀 애플리케이션 컨테이너 실행"
-            docker run -d --name seosa-server --link seosa-redis -p 8080:8080 \
+            docker run -d --name seosa-ecr --link seosa-redis -p 8080:8080 \
               --restart always \
               -m 512m --memory-swap 1g \
               --env-file /home/ubuntu/seosa.env \
-              ${{ steps.login-ecr.outputs.registry }}/seosa-server:latest
+              ${{ steps.login-ecr.outputs.registry }}/seosa-ecr:latest
 
             echo "✅ 배포 완료! 상태 확인 시작..."
 
@@ -117,7 +117,7 @@ jobs:
 
             # 애플리케이션 컨테이너 상태 확인
             echo "🔍 애플리케이션 컨테이너 상태 확인 중..."
-            if docker ps | grep -q seosa-server; then
+            if docker ps | grep -q seosa-ecr; then
               echo "✅ 애플리케이션이 정상적으로 실행 중입니다!"
             else
               echo "❌ 애플리케이션이 실행되지 않았습니다! 배포 실패!"
@@ -149,4 +149,4 @@ jobs:
             echo "애플리케이션 상태를 확인합니다..."
             sleep 5
             docker ps -a
-            docker logs --tail 50 seosa-server
+            docker logs --tail 50 seosa-ecr
