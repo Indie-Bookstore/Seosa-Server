@@ -1,4 +1,3 @@
-# github workflow (edit)
 name: Deploy To EC2
 
 on:
@@ -21,10 +20,8 @@ jobs:
 
       - name: application.yml 파일 만들기
         run: |
-          cd ./seosa/src/main
-          mkdir -p resources
-          cd resources
-          cat <<EOF > application.yml
+          mkdir -p ./seosa/src/main/resources
+          cat > ./seosa/src/main/resources/application.yml << 'EOF'
           ${{ secrets.APPLICATION_PROPERTIES }}
           EOF
 
@@ -40,10 +37,10 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
-      - name: ECR에 로그인하기
+      - name: ECR에 로그인하기 (Runner)
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
-        
+
       - name: Docker 이미지 생성
         run: |
           cd ./seosa
@@ -69,60 +66,72 @@ jobs:
           script: |
             set -Eeuo pipefail
 
-            # (선택) aws-cli 없으면 설치
+            # aws-cli 필요시 설치
             if ! command -v aws >/dev/null 2>&1; then
               sudo apt-get update -y && sudo apt-get install -y awscli
             fi
-            
+
             echo "🔄 배포를 시작합니다..."
 
-            # ✅ EC2 → ECR 로그인 (IAM 역할 필요)
+            # ✅ EC2 → ECR 로그인 (IAM Role 전제)
             AWS_REGION=ap-northeast-2
             AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
             ECR_REG="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
             aws ecr get-login-password --region "$AWS_REGION" \
               | docker login --username AWS --password-stdin "$ECR_REG"
 
-            # 환경 변수 저장
+            # 환경 변수 저장 (.env)
             echo "🔍 .env 파일을 생성합니다..."
-            cat <<EOF > /home/ubuntu/seosa.env
+            cat > /home/ubuntu/seosa.env << 'EOF'
             SPRING_REDIS_HOST=seosa-redis
             SPRING_REDIS_PORT=6379
+
             SPRING_MAIL_USERNAME=${{ secrets.SPRING_MAIL_USERNAME }}
             SPRING_MAIL_PASSWORD=${{ secrets.SPRING_MAIL_PASSWORD }}
+
+            DB_USERNAME=${{ secrets.DB_USERNAME }}
+            DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+
+            KAKAO_CLIENT_ID=${{ secrets.KAKAO_CLIENT_ID }}
+            KAKAO_CLIENT_SECRET=${{ secrets.KAKAO_CLIENT_SECRET }}
+
+            JWT_SECRET=${{ secrets.JWT_SECRET }}
+
             JAVA_OPTS=-Xmx256m -Xms128m
             EOF
 
-            echo "🔝 빌트중 아직 사용안하는 Docker 이미지 제거"
-            docker image prune -f
+            echo "🔝 빌드 중 사용 안 하는 Docker 이미지 제거"
+            docker image prune -f || true
 
-            if docker ps -q --filter "name=seosa-redis" | grep -q .; then
+            # Redis 컨테이너 확인/실행 (안전 체크)
+            if [ -n "$(docker ps -q -f name=^seosa-redis$)" ]; then
               echo "✅ Redis가 이미 실행 중입니다."
             else
               echo "🚀 Redis 컨테이너를 실행합니다..."
               docker run -d --name seosa-redis -p 6379:6379 \
+                --restart always \
                 --memory=256m redis:latest
             fi
 
-            echo "🔝 기존 케이드 중지/삭제"
+            echo "🔝 기존 컨테이너 중지/삭제"
             docker stop seosa-ecr || true
             docker rm seosa-ecr || true
 
             echo "⬇️ 최신 이미지 가져오기"
-            docker pull ${{ steps.login-ecr.outputs.registry }}/seosa-ecr:latest
+            docker pull "$ECR_REG/seosa-ecr:latest"
 
             echo "🚀 애플리케이션 컨테이너 실행"
             docker run -d --name seosa-ecr --link seosa-redis -p 8080:8080 \
               --restart always \
               -m 512m --memory-swap 1g \
               --env-file /home/ubuntu/seosa.env \
-              ${{ steps.login-ecr.outputs.registry }}/seosa-ecr:latest
+              "$ECR_REG/seosa-ecr:latest"
 
             echo "✅ 배포 완료! 상태 확인 시작..."
 
             # Redis 컨테이너 상태 확인
             echo "🔍 Redis 컨테이너 상태 확인 중..."
-            if docker ps | grep -q seosa-redis; then
+            if [ -n "$(docker ps -q -f name=^seosa-redis$)" ]; then
               echo "✅ Redis가 정상적으로 실행 중입니다!"
             else
               echo "❌ Redis가 실행되지 않았습니다! 배포 실패!"
@@ -131,7 +140,7 @@ jobs:
 
             # 애플리케이션 컨테이너 상태 확인
             echo "🔍 애플리케이션 컨테이너 상태 확인 중..."
-            if docker ps | grep -q seosa-ecr; then
+            if [ -n "$(docker ps -q -f name=^seosa-ecr$)" ]; then
               echo "✅ 애플리케이션이 정상적으로 실행 중입니다!"
             else
               echo "❌ 애플리케이션이 실행되지 않았습니다! 배포 실패!"
@@ -140,17 +149,20 @@ jobs:
 
             # Redis PING 테스트
             echo "🔄 Redis PING 테스트 중..."
-            REDIS_PING=$(docker exec seosa-redis redis-cli ping)
-            if [ "$REDIS_PING" = "PONG" ]; then
+            if [ "$(docker exec seosa-redis redis-cli ping | tr -d '\r\n')" = "PONG" ]; then
               echo "✅ Redis가 정상 작동 중입니다!"
             else
               echo "❌ Redis에 연결할 수 없습니다! 배포 실패!"
               exit 1
             fi
 
-            # Nginx 설정 테스트 및 재시작
+            # Nginx 설정 테스트 및 재시작 (있을 때만)
             echo "🔄 Nginx 설정 테스트 및 재시작..."
-            sudo nginx -t && sudo systemctl restart nginx
+            if command -v nginx >/dev/null 2>&1; then
+              sudo nginx -t && sudo systemctl restart nginx || true
+            else
+              echo "ℹ️ Nginx 미설치: 스킵"
+            fi
 
       - name: 애플리케이션 상태 확인
         uses: appleboy/ssh-action@v1.0.3
@@ -159,8 +171,13 @@ jobs:
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_PRIVATE_KEY }}
           script_stop: true
-          script: |            
+          script: |
             echo "애플리케이션 상태를 확인합니다..."
             sleep 5
             docker ps -a
-            docker logs --tail 50 seosa-ecr
+            docker logs --tail 200 seosa-ecr
+            if [ -n "$(docker ps -q -f name=^seosa-ecr$)" ]; then
+              echo "OK"
+            else
+              echo "NOT RUNNING" && exit 1
+            fi
