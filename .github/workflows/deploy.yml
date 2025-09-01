@@ -110,7 +110,9 @@ jobs:
               echo "🚀 Redis 컨테이너를 실행합니다..."
               docker run -d --name seosa-redis -p 6379:6379 \
                 --restart always \
-                --memory=256m redis:latest
+                --memory=256m \
+                --log-opt max-size=10m --log-opt max-file=3 \
+                redis:latest
             fi
 
             echo "🔝 기존 컨테이너 중지/삭제"
@@ -124,6 +126,8 @@ jobs:
             docker run -d --name seosa-ecr --link seosa-redis -p 8080:8080 \
               --restart always \
               -m 512m --memory-swap 1g \
+              --ulimit nofile=65535:65535 \
+              --log-opt max-size=10m --log-opt max-file=3 \
               --env-file /home/ubuntu/seosa.env \
               "$ECR_REG/seosa-ecr:latest"
 
