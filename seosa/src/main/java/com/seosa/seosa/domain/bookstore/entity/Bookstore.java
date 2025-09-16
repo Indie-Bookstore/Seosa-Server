@@ -29,6 +29,15 @@ public class Bookstore {
     @Column(length = 20)
     private String postalcode;
 
+    @Column
+    private double lat; // 위도
+
+    @Column
+    private double lng; // 경도
+
+    @Column(name = "kakao_place_id", length = 50)
+    private String kakaoPlaceId;
+
     @Column(length = 100)
     private String openHours;
 
@@ -49,10 +58,13 @@ public class Bookstore {
 
 
     @Builder
-    public Bookstore (String address , String detailedAddress , String postalcode , String openDays , String openHours , String phoneNumber , String instagramLink){
+    public Bookstore (String address , String detailedAddress , String postalcode ,double lat , double lng , String kakaoPlaceId ,String openDays , String openHours , String phoneNumber , String instagramLink){
         this.address = address;
         this.detailedAddress = detailedAddress;
         this.postalcode = postalcode;
+        this.lat = lat;
+        this.lng = lng;
+        this.kakaoPlaceId = kakaoPlaceId;
         this.openDays = openDays;
         this.openHours = openHours;
         this.phoneNumber = phoneNumber;
