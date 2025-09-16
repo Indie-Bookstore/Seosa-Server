@@ -15,6 +15,12 @@ public record BookstoreResDto(
         String address,
         @Schema(description = "상세주소")
         String detailedAddress,
+        @Schema(description = "위도")
+        double lat,
+        @Schema(description = "경도")
+        double lng,
+        @Schema(description = "카카오 place id")
+        String kakaoPlaceId,
         @Schema(description = "운영 요일" , example = "월,화,수")
         String openDays,
         @Schema(description = "운영 시간" , example = "9:00~18:00")
@@ -32,6 +38,9 @@ public record BookstoreResDto(
                 bookstore.getPostalcode(),
                 bookstore.getAddress(),
                 bookstore.getDetailedAddress(),
+                bookstore.getLat(),
+                bookstore.getLng(),
+                bookstore.getKakaoPlaceId(),
                 bookstore.getOpenDays(),
                 bookstore.getOpenHours(),
                 bookstore.getPhoneNumber(),

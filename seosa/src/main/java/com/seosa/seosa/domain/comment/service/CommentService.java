@@ -62,7 +62,7 @@ public class CommentService {
           List<Comment> comments = commentRepository.findByPostId(postId);
 
           List<CommentResDto> commentResDtos = comments.stream()
-                  .map(comment -> CommentResDto.to(comment , user , post))
+                  .map(comment -> CommentResDto.to(comment , comment.getUser() , post))
                   .collect(Collectors.toList());
 
           return  commentResDtos;
