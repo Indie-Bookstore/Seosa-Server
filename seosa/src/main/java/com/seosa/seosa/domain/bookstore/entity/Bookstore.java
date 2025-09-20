@@ -29,10 +29,10 @@ public class Bookstore {
     @Column(length = 20)
     private String postalcode;
 
-    @Column
+    @Column(nullable = false)
     private double lat; // 위도
 
-    @Column
+    @Column(nullable = false)
     private double lng; // 경도
 
     @Column(name = "kakao_place_id", length = 50)
