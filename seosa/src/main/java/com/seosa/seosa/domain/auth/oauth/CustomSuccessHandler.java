@@ -10,6 +10,7 @@ import com.seosa.seosa.global.exception.ErrorCode;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
@@ -21,6 +22,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
+@Slf4j
 @Component
 public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
@@ -63,12 +65,14 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
                 uri = "seosa://home";
             }
 
-            System.out.println(uri);
-
             String targetUrl = UriComponentsBuilder.fromUriString(uri)
                     .queryParam("accessToken", accessToken)
                     .queryParam("refreshToken", refreshToken)
                     .build().toUriString();
+
+            // ✅ 로그 남기기
+            log.info("[OAuth2 Success] userId={}, role={}, redirectUri={}",
+                    userId, role, targetUrl);
 
             getRedirectStrategy().sendRedirect(request, response, targetUrl);
 
